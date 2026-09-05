@@ -94,8 +94,13 @@ section.lead{margin-top:30px}
 
 /* ---------- controls ---------- */
 .controls{position:sticky; top:0; z-index:5; background:var(--ground);
-  padding:12px 0 10px; border-bottom:1px solid var(--line);
-  display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  padding:12px 0 11px; border-bottom:1px solid var(--line);
+  display:flex; flex-direction:column; gap:9px}
+.ctl-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.ctl-row > .ctl-label{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; font-weight:600;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--muted);
+  flex:0 0 58px; padding-top:1px}
 input[type=search]{
   font:inherit; font-size:14px; padding:8px 12px; min-width:220px; flex:1 1 240px;
   border:1px solid var(--line-strong); border-radius:8px; background:var(--surface); color:var(--ink);
@@ -108,6 +113,8 @@ input[type=search]:focus-visible, .chip:focus-visible, .toggle:focus-visible, su
 .chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
 :root[data-theme="dark"] .chip[aria-pressed="true"]{color:#08201d}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#08201d}}
+.chip .cnt{font-family:"IBM Plex Mono",monospace; font-size:11px; opacity:.6; margin-left:2px}
+.chip[aria-pressed="true"] .cnt{opacity:.75}
 .toggle{font:inherit; font-size:12.5px; padding:6px 11px; border-radius:8px; cursor:pointer;
   border:1px dashed var(--line-strong); background:transparent; color:var(--muted)}
 .toggle[aria-pressed="true"]{border-style:solid; border-color:var(--accent); color:var(--accent)}
@@ -196,9 +203,18 @@ footer li{margin:4px 0}
     <p class="sec-note">Полоса под ценой показывает, где проект стоит на общей шкале цен за м² — от самого дешёвого до самого дорогого в базе. Нажмите на строку, чтобы раскрыть застройщика, срок сдачи и форму владения.</p>
 
     <div class="controls">
-      <input type="search" id="q" placeholder="Поиск по названию или застройщику" aria-label="Поиск по названию или застройщику">
-      <div class="chips" id="chips"></div>
-      <button class="toggle" id="only-price" aria-pressed="false">Только с ценой за м²</button>
+      <div class="ctl-row">
+        <input type="search" id="q" placeholder="Поиск по названию или застройщику" aria-label="Поиск по названию или застройщику">
+        <button class="toggle" id="only-price" aria-pressed="false">Только с ценой за м²</button>
+      </div>
+      <div class="ctl-row">
+        <span class="ctl-label" id="lbl-d">Район</span>
+        <div class="chips" id="chips" role="group" aria-labelledby="lbl-d"></div>
+      </div>
+      <div class="ctl-row">
+        <span class="ctl-label" id="lbl-t">Тип</span>
+        <div class="chips" id="tchips" role="group" aria-labelledby="lbl-t"></div>
+      </div>
     </div>
 
     <div id="list"></div>
@@ -294,11 +310,28 @@ footer li{margin:4px 0}
   });
 
   const chips = document.getElementById('chips');
-  chips.innerHTML = '<button class="chip" aria-pressed="true" data-d="*">Все</button>' +
-    groups.map(g=>'<button class="chip" aria-pressed="false" data-d="'+esc(g.title)+'">'+esc(g.title)+'</button>').join('');
+  chips.innerHTML = '<button class="chip" aria-pressed="true" data-d="*">Все районы</button>' +
+    groups.map(g=>'<button class="chip" aria-pressed="false" data-d="'+esc(g.title)+'">'
+      + esc(g.title) + ' <span class="cnt">' + g.items.length + '</span></button>').join('');
+
+  // Тип недвижимости берём из колонки «Тип недвижимости» — проект может быть сразу нескольких типов.
+  const TYPES = [
+    ['condo',     'Кондо',      p => /condo/i.test(p.type)],
+    ['villa',     'Виллы',      p => /villa|вилл/i.test(p.type)],
+    ['townhouse', 'Таунхаусы',  p => /townhouse|таунхаус/i.test(p.type)],
+    ['none',      'Тип не указан', p => !p.type.trim()]
+  ];
+  const tchips = document.getElementById('tchips');
+  tchips.innerHTML = '<button class="chip" aria-pressed="true" data-t="*">Все типы</button>' +
+    TYPES.map(([k,label,test])=>{
+      const n = P.filter(test).length;
+      return n ? '<button class="chip" aria-pressed="false" data-t="'+k+'">'
+        + esc(label) + ' <span class="cnt">' + n + '</span></button>' : '';
+    }).join('');
 
   const list = document.getElementById('list');
-  let filterD = '*', onlyPrice = false, query = '';
+  let filterD = '*', filterT = '*', onlyPrice = false, query = '';
+  const typeTest = k => (TYPES.find(t=>t[0]===k) || [,, () => true])[2];
 
   function rowHTML(p, i){
     const has = typeof p.m2n === 'number';
@@ -330,6 +363,7 @@ footer li{margin:4px 0}
     groups.forEach(g=>{
       if(filterD !== '*' && filterD !== g.title) return;
       let items = g.items;
+      if(filterT !== '*') items = items.filter(typeTest(filterT));
       if(onlyPrice) items = items.filter(p=>typeof p.m2n==='number');
       if(q) items = items.filter(p=>(p.name+' '+p.dev+' '+p.area).toLowerCase().includes(q));
       if(!items.length) return;
@@ -343,13 +377,19 @@ footer li{margin:4px 0}
         + '<span class="meta">'+items.length+' проект.  ·  '+range+'</span></div>'
         + '<div class="rows">' + items.map((p,i)=>rowHTML(p,i+1)).join('') + '</div></div>';
     });
-    list.innerHTML = out || '<p class="empty">Ничего не найдено. Попробуйте изменить запрос или снять фильтры.</p>';
+    list.innerHTML = out || '<p class="empty">Под эти фильтры не подходит ни один проект. Снимите фильтр по типу или району.</p>';
   }
 
   chips.addEventListener('click', e=>{
     const b = e.target.closest('.chip'); if(!b) return;
     filterD = b.dataset.d;
     chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
+    render();
+  });
+  tchips.addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    filterT = b.dataset.t;
+    tchips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
     render();
   });
   document.getElementById('only-price').addEventListener('click', e=>{
