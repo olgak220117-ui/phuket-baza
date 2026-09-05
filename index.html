@@ -1,0 +1,359 @@
+<title>База Пхукета</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@500;600;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f1f4f3; --surface:#ffffff; --surface-2:#e9efed;
+  --ink:#11201e; --ink-2:#3d5350; --muted:#6b807d;
+  --line:#d5dedc; --line-strong:#b9c7c4;
+  --accent:#0d6e63; --accent-soft:#dcebe7; --accent-line:#9ec9c0;
+  --brass:#a8761f; --brass-soft:#f4e9d2;
+  --bar-track:#e2e9e7; --bar-low:#3f9c86; --bar-mid:#c99a3a; --bar-high:#b05f45;
+  --shadow:0 1px 2px rgba(17,32,30,.05), 0 8px 24px -18px rgba(17,32,30,.35);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0c1514; --surface:#121e1d; --surface-2:#182726;
+    --ink:#e7efed; --ink-2:#bccbc8; --muted:#8ba39f;
+    --line:#263836; --line-strong:#3a4f4c;
+    --accent:#54c3b0; --accent-soft:#16302c; --accent-line:#2f5c55;
+    --brass:#d7a94e; --brass-soft:#2c2415;
+    --bar-track:#20302e; --bar-low:#4fbfa3; --bar-mid:#d7a94e; --bar-high:#d68264;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0c1514; --surface:#121e1d; --surface-2:#182726;
+  --ink:#e7efed; --ink-2:#bccbc8; --muted:#8ba39f;
+  --line:#263836; --line-strong:#3a4f4c;
+  --accent:#54c3b0; --accent-soft:#16302c; --accent-line:#2f5c55;
+  --brass:#d7a94e; --brass-soft:#2c2415;
+  --bar-track:#20302e; --bar-low:#4fbfa3; --bar-mid:#d7a94e; --bar-high:#d68264;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  font-size:15px; line-height:1.55; margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:0 20px 72px}
+h1,h2,h3{font-family:"Golos Text","IBM Plex Sans",Arial,sans-serif; text-wrap:balance; margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+}
+
+/* ---------- masthead ---------- */
+header.mast{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--surface) 0%,var(--ground) 100%);
+}
+.mast-in{max-width:1120px; margin:0 auto; padding:32px 20px 26px;
+  display:flex; flex-wrap:wrap; gap:28px; align-items:flex-end; justify-content:space-between}
+.mast h1{font-size:clamp(28px,4.4vw,42px); font-weight:800; letter-spacing:-.02em; line-height:1.08}
+.mast p.lede{margin:10px 0 0; max-width:56ch; color:var(--ink-2); font-size:15px}
+.counts{display:flex; gap:26px}
+.count b{display:block; font-family:"IBM Plex Mono",monospace; font-size:26px; font-weight:600;
+  color:var(--accent); line-height:1; font-variant-numeric:tabular-nums}
+.count span{display:block; margin-top:6px; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted)}
+
+/* ---------- section shell ---------- */
+section{margin-top:52px}
+.sec-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:6px}
+.sec-head h2{font-size:23px; font-weight:600; letter-spacing:-.01em}
+.sec-note{color:var(--muted); font-size:13.5px; max-width:74ch; margin:0 0 22px}
+
+/* ---------- top-15 ---------- */
+.pick-group{margin-top:26px}
+.pick-group > .eyebrow{
+  display:flex; align-items:center; gap:12px; margin-bottom:10px;
+}
+.pick-group > .eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+.picks{display:grid; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.pick{
+  background:var(--surface); padding:14px 18px;
+  display:grid; grid-template-columns:minmax(190px,1.5fr) 1fr 1fr auto; gap:8px 22px; align-items:baseline;
+}
+.pick .nm{font-family:"Golos Text",sans-serif; font-weight:600; font-size:16.5px; letter-spacing:-.01em}
+.pick .nm small{display:block; font-family:"IBM Plex Mono",monospace; font-weight:400;
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:3px}
+.fig .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:block}
+.fig .v{font-family:"IBM Plex Mono",monospace; font-size:14px; font-variant-numeric:tabular-nums}
+.fig .v.hero{font-size:15px; font-weight:600}
+.pick .when{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); white-space:nowrap}
+.pick-note{grid-column:1/-1; font-size:12.5px; color:var(--muted); border-left:2px solid var(--accent-line);
+  padding-left:10px; margin-top:4px; font-style:italic}
+
+/* ---------- controls ---------- */
+.controls{position:sticky; top:0; z-index:5; background:var(--ground);
+  padding:12px 0 10px; border-bottom:1px solid var(--line);
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+input[type=search]{
+  font:inherit; font-size:14px; padding:8px 12px; min-width:220px; flex:1 1 240px;
+  border:1px solid var(--line-strong); border-radius:8px; background:var(--surface); color:var(--ink);
+}
+input[type=search]:focus-visible, .chip:focus-visible, .toggle:focus-visible, summary:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px}
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{font:inherit; font-size:12.5px; padding:6px 11px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#08201d}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#08201d}}
+.toggle{font:inherit; font-size:12.5px; padding:6px 11px; border-radius:8px; cursor:pointer;
+  border:1px dashed var(--line-strong); background:transparent; color:var(--muted)}
+.toggle[aria-pressed="true"]{border-style:solid; border-color:var(--accent); color:var(--accent)}
+
+/* ---------- district blocks ---------- */
+.district{margin-top:34px; scroll-margin-top:76px}
+.d-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  padding-bottom:8px; border-bottom:2px solid var(--ink)}
+.d-head h3{font-size:19px; font-weight:800; letter-spacing:.01em; text-transform:uppercase}
+.d-head .meta{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); margin-left:auto}
+
+.rows{display:flex; flex-direction:column}
+.row{border-bottom:1px solid var(--line)}
+.row > summary{
+  list-style:none; cursor:pointer; padding:13px 4px;
+  display:grid; grid-template-columns:38px minmax(150px,1.6fr) 150px 1fr minmax(120px,.9fr) 18px;
+  gap:6px 18px; align-items:center;
+}
+.row > summary::-webkit-details-marker{display:none}
+.row:hover > summary{background:var(--surface)}
+.rank{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); text-align:right}
+.pname{font-family:"Golos Text",sans-serif; font-weight:600; font-size:15.5px; letter-spacing:-.01em}
+.pname em{font-style:normal; font-family:"IBM Plex Mono",monospace; font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:block; margin-top:2px}
+.m2{display:flex; flex-direction:column; gap:5px}
+.m2 b{font-family:"IBM Plex Mono",monospace; font-size:14.5px; font-weight:600; font-variant-numeric:tabular-nums}
+.m2 b .u{font-weight:400; font-size:11px; color:var(--muted); letter-spacing:.04em}
+.m2 .na{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--muted)}
+.bar{height:4px; border-radius:2px; background:var(--bar-track); overflow:hidden}
+.bar i{display:block; height:100%; border-radius:2px}
+.unitp{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-2);
+  font-variant-numeric:tabular-nums; white-space:pre-line}
+.unitp.none{color:var(--muted)}
+.when2{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.caret{color:var(--muted); font-size:11px; transition:transform .15s}
+.row[open] .caret{transform:rotate(90deg)}
+.detail{padding:4px 4px 20px 60px; display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px 26px; background:var(--surface)}
+.detail dt{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin-bottom:3px}
+.detail dd{margin:0; font-size:13.5px; color:var(--ink-2); white-space:pre-line}
+.detail .full{grid-column:1/-1}
+
+.empty{padding:30px 4px; color:var(--muted); font-size:14px}
+
+footer{margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
+  color:var(--muted); font-size:12.5px; max-width:78ch}
+footer b{color:var(--ink-2); font-weight:600}
+footer ul{padding-left:18px; margin:8px 0 0}
+footer li{margin:4px 0}
+
+@media (max-width:820px){
+  .pick{grid-template-columns:1fr 1fr; }
+  .pick .nm{grid-column:1/-1}
+  .pick .when{grid-column:1/-1}
+  .row > summary{grid-template-columns:30px 1fr 130px; }
+  .row > summary .unitp{grid-column:2/-1}
+  .row > summary .when2, .row > summary .caret{display:none}
+  .detail{padding-left:4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<header class="mast">
+  <div class="mast-in">
+    <div>
+      <p class="eyebrow">Рабочая база новостроек · Пхукет</p>
+      <h1>База Пхукета</h1>
+      <p class="lede">Проекты сгруппированы по районам, внутри района — от самой низкой цены за м² к самой высокой. Все цифры взяты из рабочей таблицы; ничего не добавлено из внешних источников.</p>
+    </div>
+    <div class="counts">
+      <div class="count"><b id="c-proj">—</b><span>проектов</span></div>
+      <div class="count"><b id="c-area">—</b><span>районов</span></div>
+      <div class="count"><b>15</b><span>в подборке</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="picks-sec">
+    <div class="sec-head">
+      <p class="eyebrow">Подборка</p>
+      <h2>15 проектов для презентации</h2>
+    </div>
+    <p class="sec-note">Выборка охватывает девять районов, а не только Банг Тао: от самой доступной цены за м² в Раваи до премиального Патонга. Для каждого проекта — цена квартиры от и цена за м² от в том виде, в каком они есть в таблице.</p>
+    <div id="picks"></div>
+  </section>
+
+  <section id="catalog">
+    <div class="sec-head">
+      <p class="eyebrow">Каталог</p>
+      <h2>Все проекты по районам</h2>
+    </div>
+    <p class="sec-note">Полоса под ценой показывает, где проект стоит на общей шкале цен за м² — от самого дешёвого до самого дорогого в базе. Нажмите на строку, чтобы раскрыть застройщика, срок сдачи и форму владения.</p>
+
+    <div class="controls">
+      <input type="search" id="q" placeholder="Поиск по названию или застройщику" aria-label="Поиск по названию или застройщику">
+      <div class="chips" id="chips"></div>
+      <button class="toggle" id="only-price" aria-pressed="false">Только с ценой за м²</button>
+    </div>
+
+    <div id="list"></div>
+  </section>
+
+  <footer>
+    <p><b>Как читать данные.</b> Всё показанное здесь взято из рабочей таблицы и вычитано только по орфографии и формулировкам — цифры, площади, проценты и характеристики не менялись.</p>
+    <ul>
+      <li>Прочерк вместо цены означает, что в таблице этого значения нет. Такие проекты стоят в конце своего района.</li>
+      <li>Цена за м² приведена в тыс. ฿. Sunnymoon — единственный проект, где цена в таблице указана в долларах, поэтому он идёт без места на общей шкале.</li>
+      <li>Layan Verde и Layan Green Park в таблице отмечены как Bang Tao, но вынесены в блок Layan по названию проекта.</li>
+      <li>19 проектов в таблице пока без указанного района — они собраны в отдельный блок в конце.</li>
+    </ul>
+  </footer>
+</div>
+
+<script id="projects" type="application/json">[{"row": 4, "name": "Space Odyssey", "area": "Rawai", "type": "Condo, Villa", "m2": "110 тыс. ฿/м²", "m2n": 110, "unit": "3 200 тыс. ฿ · 29 м²", "compl": "Начало 2028 года. В процессе строительства столкнулись с каменным грунтом; ведутся бурение и заливка бетона.", "dev": "VIP Thailand", "own": "Оба варианта", "sea": "6,7, 8 этаж", "promo": ""}, {"row": 5, "name": "VIP Tropica", "area": "Bang Tao", "type": "Condo, Townhouse", "m2": "От 130 тыс.\nСкидка 20% на первую и вторую фазу.", "m2n": 130, "unit": "35 м² (цена в таблице не указана)", "compl": "начало 2028", "dev": "VIP Thailand", "own": "Оба варианта", "sea": "-", "promo": ""}, {"row": 6, "name": "VIP Venus", "area": "Karon", "type": "Condo", "m2": "145", "m2n": 145, "unit": "4 350 тыс. ฿ (30 м²).", "compl": "2026 год. Осталось 12 квартир с окнами на дорогу.", "dev": "VIP Thailand", "own": "Оба варианта", "sea": "-", "promo": ""}, {"row": 7, "name": "Windham La Vita", "area": "Rawai", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "2023", "dev": "VIP Thailand", "own": "", "sea": "Есть — с 7-го и 8-го этажей (дуплексы).", "promo": ""}, {"row": 8, "name": "Essence", "area": "Rawai", "type": "Condo", "m2": "137 тыс. ฿/м²", "m2n": 137, "unit": "", "compl": "Первый квартал 2026 года.", "dev": "Harmony group", "own": "Не уточнено, Оба варианта", "sea": "", "promo": ""}, {"row": 9, "name": "Sunnymoon", "area": "Rawai", "type": "Condo", "m2": "От 3 918 $ за м² (115 м²).\n39 м², 6-й этаж — 197 тыс. $.", "m2n": null, "unit": "452 465 $", "compl": "2026 год — сдача зданий 1 и 2; 2028 год — сдача здания 3.", "dev": "Sunny Develop Group", "own": "Не уточнено, Оба варианта", "sea": "нет", "promo": ""}, {"row": 10, "name": "Fantasea Rawai", "area": "Rawai", "type": "Condo", "m2": "От 105 / 110 / 115 тыс.", "m2n": 105, "unit": "От 3 570 тыс. ฿ за 34 м².", "compl": "май 2028", "dev": "Fantasea Plus", "own": "Оба варианта", "sea": "Да, есть ещё одно здание.", "promo": "Цена 100 тыс. за м² на любом этаже; мебельный пакет — 100 тыс. ฿. Кредит на 50% стоимости: 200 тыс. ฿, 35%, через 2 месяца — 15%; срок до 3 лет под 7% годовых."}, {"row": 11, "name": "Fantasea Chalong", "area": "Chalong", "type": "Condo", "m2": "От 107 тыс. — 2–3-й этажи.\nОт 112 тыс. — 4–8-й этажи.", "m2n": 107, "unit": "2 996 тыс. ฿ за 28 м².\n3 136 тыс. ฿ за 28 м² на 4-м этаже.", "compl": "июль 2027", "dev": "", "own": "Оба варианта", "sea": "Вида на море нет, но из корпуса B (внешняя сторона) виден Большой Будда.", "promo": ""}, {"row": 12, "name": "The One", "area": "Rawai", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "2026 декабрь", "dev": "The One", "own": "Не уточнено, Оба варианта", "sea": "", "promo": ""}, {"row": 13, "name": "Aura", "area": "Chalong", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "Конец 2028", "dev": "Aura", "own": "Не уточнено, Оба варианта", "sea": "", "promo": ""}, {"row": 14, "name": "Title Adora", "area": "Rawai", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "июнь 27", "dev": "Title", "own": "Оба варианта", "sea": "", "promo": ""}, {"row": 15, "name": "Title Cielo", "area": "Rawai", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "Сентябрь 2026 года, оплаты — до декабря.", "dev": "Title", "own": "Оба варианта", "sea": "", "promo": ""}, {"row": 16, "name": "Next Point", "area": "Rawai", "type": "Condo", "m2": "93 тыс. ฿/м²", "m2n": 93, "unit": "Корпус 4 — только leasehold (подключён к международной системе).", "compl": "4 квартал 2028 года", "dev": "South Point Group", "own": "Не уточнено, Leasehold", "sea": "Вид на море — более чем из 90% юнитов, начиная с 3-го этажа.", "promo": "Медицинская страховка на 2 года для двух человек или инвестиционная виза."}, {"row": 17, "name": "Rise Villas", "area": "Bang Tao", "type": "Villa", "m2": "100 тыс. ฿/м²", "m2n": 100, "unit": "Таунхаус от 11 млн ฿, внутренняя площадь 104 м².", "compl": "конец 2027", "dev": "IBG", "own": "", "sea": "нет", "promo": ""}, {"row": 18, "name": "Qunity", "area": "", "type": "", "m2": "03.04.2005", "m2n": null, "unit": "От 29 млн ฿, 3 спальни, без мебели.", "compl": "Tops в пешей доступности.", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 19, "name": "Harmony", "area": "", "type": "", "m2": "3 спальни и 5 спален.", "m2n": null, "unit": "От 27 млн ฿ с мебельным пакетом и бассейном.", "compl": "Застройщик — таец, вся земля в собственности.", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 20, "name": "Wallaya hill", "area": "", "type": "", "m2": "8 трёхэтажных вилл по 548 м², 4 комнаты.", "m2n": null, "unit": "36 млн ฿ без мебели и 3 500 тыс. ฿.", "compl": "построено!", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 21, "name": "Wallaya", "area": "Rawai", "type": "Condo", "m2": "120–150 тыс. ฿/м²", "m2n": 120, "unit": "4 320 тыс. ฿", "compl": "начало 2028", "dev": "Wallaya — семейный бизнес: 30 реализованных проектов; сейчас строятся 3 кондоминиума и 3 виллы.", "own": "Не уточнено, Оба варианта", "sea": "", "promo": ""}, {"row": 22, "name": "The City", "area": "Kamala", "type": "Condo", "m2": "От 135 тыс. ฿ + 5 тыс. ฿ за каждый этаж выше (leasehold).", "m2n": 135, "unit": "От 6 210 тыс. ฿ за 46 м².", "compl": "28 год май", "dev": "", "own": "Оба варианта", "sea": "Только 2- и 3-комнатные в корпусе A, с 5-го и 6-го этажей.", "promo": "До конца лета — 125 тыс. ฿ за м²; однокомнатные по 5 750 тыс. ฿ на любом этаже."}, {"row": 23, "name": "Либерти", "area": "", "type": "", "m2": "135 тыс. ฿ за м² + 6 тыс. ฿ за каждый этаж.", "m2n": 135, "unit": "135 м² (цена в таблице не указана)", "compl": "2029", "dev": "", "own": "Оба варианта", "sea": "", "promo": ""}, {"row": 24, "name": "Utopia Glam/Mini/Maxi Etc", "area": "Rawai", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "Utopia", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 25, "name": "Utopia Central", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 26, "name": "Utopia Karon", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 27, "name": "Utopia Maikhao", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 28, "name": "Above Element", "area": "Bang Tao", "type": "Condo", "m2": "151 тыс. ฿/м²", "m2n": 151, "unit": "5 740 тыс. ฿ · 38 м²", "compl": "сдан", "dev": "Art House", "own": "Оба варианта", "sea": "нет", "promo": ""}, {"row": 29, "name": "Hennessy", "area": "Kata", "type": "Condo", "m2": "От 200 тыс. ฿.", "m2n": 200, "unit": "9,4 млн ฿ · 47 м²", "compl": "Декабрь 2027 года (запуск в аренду — 2028 год).", "dev": "Art House", "own": "Оба варианта", "sea": "3-й и 4-й этажи (продано); F401 — торцевая.", "promo": ""}, {"row": 30, "name": "Hennessy villa", "area": "", "type": "", "m2": "on 72,8 мл", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "15 минут пешком до моря.", "promo": ""}, {"row": 31, "name": "The Balance by the Beach", "area": "Kata", "type": "Condo", "m2": "130 тыс. ฿/м²", "m2n": 130, "unit": "5,5 млн ฿ · 38 м²", "compl": "июль 2027", "dev": "Balance Property Group", "own": "Оба варианта", "sea": "нет", "promo": ""}, {"row": 32, "name": "Title Katabello", "area": "Kata", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "Июль и сентябрь 2027 года.", "dev": "Rhom Bho", "own": "Оба варианта", "sea": "нет", "promo": ""}, {"row": 33, "name": "Abov Patotg", "area": "Patong", "type": "Condo", "m2": "232 тыс. ฿/м²", "m2n": 232, "unit": "10 млн ฿ за 43,3 м² (личный бассейн 3 × 2 м).", "compl": "Резиденции — начало 2026 года; отельная часть — позже.", "dev": "World Corporation", "own": "Оба варианта", "sea": "Видовых юнитов не осталось; частичный вид — в здании 10 на 3–4-м этажах.", "promo": ""}, {"row": 34, "name": "Abov Patotg виллы", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "Срок строительства — 14 месяцев.", "dev": "", "own": "", "sea": "Вид на море есть.", "promo": ""}, {"row": 35, "name": "The City Phuket", "area": "Kathu", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "World Corporation", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 36, "name": "Title Serenity", "area": "Nai Yang", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "Rhom Bho", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 37, "name": "Arise vibe (Thalang)", "area": "Bang Tao", "type": "Condo", "m2": "100 тыс. ฿/м²", "m2n": 100, "unit": "34 м² — 3 200 тыс. ฿.", "compl": "ноябрь 2026", "dev": "Ornsirin", "own": "Оба варианта", "sea": "нет", "promo": ""}, {"row": 38, "name": "Ayana Heights", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "январь 27", "dev": "TH Group", "own": "Оба варианта", "sea": "Видовые квартиры — 60%.", "promo": ""}, {"row": 39, "name": "Bellevue Lagoon", "area": "Bang Tao", "type": "Condo", "m2": "140 тыс. ฿/м²", "m2n": 140, "unit": "4,8 млн ฿ · 35 м²", "compl": "сдан", "dev": "Bellevue", "own": "Leasehold", "sea": "нет", "promo": ""}, {"row": 40, "name": "Bellevue Beachfront", "area": "Bang Tao", "type": "Condo", "m2": "315 тыс. ฿/м²", "m2n": 315, "unit": "9 млн ฿ · 32 м²", "compl": "декабрь 26", "dev": "Bellevue", "own": "Leasehold", "sea": "да", "promo": ""}, {"row": 41, "name": "Botanica Hythe", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "10,9 млн ฿ за 58 м².", "compl": "март 2027", "dev": "Botanica", "own": "Не уточнено, Оба варианта", "sea": "Нет", "promo": ""}, {"row": 42, "name": "Botanica Gens", "area": "Bang Tao", "type": "Condo", "m2": "187 тыс. ฿/м²", "m2n": 187, "unit": "3,9 млн ฿ · 35 м²", "compl": "", "dev": "", "own": "", "sea": "нет", "promo": ""}, {"row": 43, "name": "Botanica Chalong ( новый поселок) виллы с видом на море", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 44, "name": "Capri", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "Fantasea", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 45, "name": "Garden of Edens", "area": "Layan", "type": "Condo", "m2": "1-я фаза — конец 2026 года, от 300 м²; 2-я фаза — от 220 за м²; 3-я фаза — от 190 за м².", "m2n": 190, "unit": "2-я фаза: 50 м² — 14 млн ฿; 3-я фаза: от 12 млн ฿ за 50–62 м².", "compl": "1-я фаза — конец 2026 года.\n2-я фаза — срок уточняется.\n3-я фаза — срок уточняется.", "dev": "Amal Group", "own": "Оба варианта", "sea": "да", "promo": ""}, {"row": 46, "name": "Laya Resort", "area": "Bang Tao", "type": "Condo", "m2": "205 тыс. ฿/м²", "m2n": 205, "unit": "50 м² — около 8 млн ฿.", "compl": "декабрь 2026", "dev": "DELSK Group", "own": "Оба варианта", "sea": "да", "promo": ""}, {"row": 47, "name": "Layan Verde", "area": "Layan", "type": "Condo", "m2": "От 190 в leasehold, без мебельного пакета.", "m2n": 190, "unit": "Студия 37 м² — 7700 мл.", "compl": "конец 2028", "dev": "VillaCarte Group", "own": "Оба варианта", "sea": "", "promo": ""}, {"row": 48, "name": "Layan Green Park", "area": "Layan", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "Vararom Premium Assets", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 49, "name": "Momentum", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "SID Thailand", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 50, "name": "Ozone", "area": "Bang Tao", "type": "Condo", "m2": "127 тыс. ฿/м² (промоакция на фазы 1 и 2)", "m2n": 127, "unit": "", "compl": "March 2028", "dev": "Ozone", "own": "Не уточнено", "sea": "-", "promo": ""}, {"row": 51, "name": "Siamese", "area": "Bang Tao", "type": "Condo", "m2": "127 тыс. ฿/м² (в отдельных юнитах — 130)", "m2n": 127, "unit": "45 м² — 5650, 1 BR; мебель и техника включены.", "compl": "3-й квартал 2027 года (сдача всех корпусов одновременно).", "dev": "Siamese Stone", "own": "Не уточнено, Оба варианта", "sea": "НЕТ", "promo": ""}, {"row": 52, "name": "So Origin Residance", "area": "Bang Tao", "type": "Condo", "m2": "139 тыс. ฿/м²", "m2n": 139, "unit": "5 600 тыс. ฿ · 40 м²", "compl": "Строительство ещё не начато: старт — второй квартал 2027 года, сдача — 2028 год.", "dev": "So Origin", "own": "Leasehold", "sea": "С бара на крыше вид есть; до пляжа 400 метров.", "promo": ""}, {"row": 53, "name": "So Origin Bang Tao beach", "area": "Bang Tao", "type": "Condo", "m2": "152 тыс. ฿/м²", "m2n": 152, "unit": "26 м² — 3 900 тыс. ฿.", "compl": "Достроится в марте 2027 года.", "dev": "So Origin", "own": "Оба варианта", "sea": "нет", "promo": ""}, {"row": 54, "name": "So lagoon", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 55, "name": "So Kata", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 56, "name": "Standard Residences", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "CG Capital", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 57, "name": "Sudara", "area": "Bang Tao", "type": "Condo", "m2": "от 220 тыс. ฿/м²", "m2n": 220, "unit": "11 млн ฿ в leasehold за 52 м².\n13 млн ฿ во freehold за 52 м².", "compl": "Декабрь 2027 года.\nАнонс нового проекта — в октябре 2026 года.", "dev": "Andara", "own": "Не уточнено, Оба варианта", "sea": "нет", "promo": ""}, {"row": 58, "name": "Sunhills", "area": "Bang Tao", "type": "Condo", "m2": "от 146 тыс. ฿/м²", "m2n": 146, "unit": "", "compl": "", "dev": "Sunhills", "own": "Не уточнено", "sea": "", "promo": ""}, {"row": 59, "name": "Sunhills lake side", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 60, "name": "Title Legendary", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "Title", "own": "Не уточнено", "sea": "500 метров до моря.", "promo": ""}, {"row": 61, "name": "Sierra", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "2 906 тыс. ฿ · 28 м²", "compl": "Q3 2028", "dev": "", "own": "", "sea": "10 минут до моря.", "promo": ""}, {"row": 62, "name": "ViVi", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "500 метров до моря.", "promo": ""}, {"row": 63, "name": "Artrio", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "10 минут до моря.", "promo": ""}, {"row": 64, "name": "Modeva", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "500 метров до моря.", "promo": ""}, {"row": 65, "name": "Kirara", "area": "Bang Tao", "type": "Villa", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "20 минут до моря.", "promo": ""}, {"row": 66, "name": "Peylaa", "area": "Bang Tao", "type": "Condo", "m2": "172 тыс. ฿ за м² — за односпальную.\n167 тыс. ฿ за м² — за двуспальную.", "m2n": 167, "unit": "7 740 тыс. ฿ за односпальную (45 м²).", "compl": "1-я фаза — декабрь 2027 года (корпуса A, B).\n2-я фаза — август 2028 года (корпус C).", "dev": "", "own": "Оба варианта", "sea": "Мариот", "promo": ""}, {"row": 67, "name": "Andaman Riviera", "area": "Bang Tao", "type": "Condo", "m2": "от 200 тыс. ฿/м²", "m2n": 200, "unit": "", "compl": "сдан в 2025", "dev": "Тайская", "own": "Оба варианта", "sea": "Вид на море с крыш.", "promo": ""}, {"row": 68, "name": "Andaman Boutique", "area": "", "type": "", "m2": "180 тыс. ฿ за м² (только трёхспальные).\nBoutique 2 — 125 тыс. ฿ за м² (студии, однокомнатные и двухкомнатные с террасами).\n130 тыс. ฿ за м² — за однокомнатную.", "m2n": 130, "unit": "Студия 40 м² — 5 млн ฿.\nБольшой бутик — 44 млн ฿.", "compl": "конец 2027", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 69, "name": "Andaman Atrium", "area": "", "type": "", "m2": "Студии — 180 тыс. ฿ за м².\nОднокомнатные — 173 тыс. ฿ за м².\nДалее — 152 тыс. ฿ за м².", "m2n": 152, "unit": "Студия 36 м² — 6,5 млн ฿.\n8,5 млн ฿ — две квартиры на первом этаже с бассейном: 55 м², из них 36 м² внутри и 19 м² снаружи.", "compl": "конец 2027", "dev": "", "own": "", "sea": "Вид на море с крыш.", "promo": ""}, {"row": 70, "name": "Bamboo forest", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 71, "name": "Sansiri Dicondo", "area": "", "type": "Condo", "m2": "100 тыс. ฿/м²", "m2n": 100, "unit": "", "compl": "июнь 27", "dev": "Sansiri", "own": "", "sea": "Нет", "promo": ""}, {"row": 72, "name": "Canvas", "area": "Bang Tao", "type": "Condo", "m2": "150–170 тыс. ฿/м²", "m2n": 150, "unit": "", "compl": "", "dev": "", "own": "", "sea": "Нет", "promo": ""}, {"row": 73, "name": "Rhea", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "от 5 млн ฿ · 35 м²", "compl": "", "dev": "", "own": "", "sea": "Нет", "promo": ""}, {"row": 74, "name": "the base", "area": "Bang Tao", "type": "Condo", "m2": "", "m2n": null, "unit": "10 двухкомнатных, 60 м² — 7,9 млн ฿.", "compl": "", "dev": "", "own": "", "sea": "Нет", "promo": ""}, {"row": 75, "name": "SoleMio", "area": "Bang Tao", "type": "Condo", "m2": "214 тыс. ฿ за м².\n160 тыс. ฿ за м² (173 м² — 12 млн ฿).", "m2n": 160, "unit": "40 млн ฿ за 188 м².", "compl": "3-й квартал 2028 года, август.", "dev": "Asion land group sole mio", "own": "Оба варианта", "sea": "2 пентхауса на 6-м и 7-м этажах с видом на море: 487 м² — 110 млн ฿ (3 комнаты с бассейном).\n867 м² — 197 млн ฿, 4 спальни, 5 санузлов, в leasehold.", "promo": ""}, {"row": 76, "name": "Zero Bangtao", "area": "Bang Tao", "type": "Condo", "m2": "Промо-юниты на 2-м этаже — от 114.\n36 м² — 6 100 тыс. ฿ с мебелью.", "m2n": 114, "unit": "", "compl": "март 2027", "dev": "The Zero — британский застройщик из Лондона, работает с 2001 года, широкая география. В Лондоне в 2023 году реализован проект The Zero.", "own": "Оба варианта", "sea": "Нет", "promo": ""}, {"row": 77, "name": "Zero Siluetta", "area": "Nai Yang", "type": "Condo", "m2": "От 125: 1 bedroom, 41 м² — 5 724 тыс. ฿; 37 м² — 5 200 тыс. ฿ с мебелью.", "m2n": 125, "unit": "", "compl": "июнь 2028", "dev": "", "own": "Оба варианта", "sea": "Прямого вида нет; до пляжа 300 метров. Вид не гарантируется из-за зелени, но с бассейна на крыше море будет видно.", "promo": ""}, {"row": 78, "name": "Этра", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}, {"row": 80, "name": "Title The Balcony", "area": "Nai Yang", "type": "Condo", "m2": "170 тыс. ฿/м²", "m2n": 170, "unit": "", "compl": "декабрь 2027", "dev": "", "own": "", "sea": "Да, 50 метров до моря.", "promo": ""}, {"row": 81, "name": "Title Vivana", "area": "Kamala", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "The Title", "own": "", "sea": "выше в улице", "promo": ""}, {"row": 82, "name": "Title Coralina", "area": "Kamala", "type": "Condo", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "Начало второй линии.", "promo": ""}, {"row": 83, "name": "Title Biancana", "area": "", "type": "", "m2": "", "m2n": null, "unit": "", "compl": "", "dev": "", "own": "", "sea": "", "promo": ""}]</script>
+<script id="picksdata" type="application/json">[{"cluster": "Rawai / Nai Harn / Chalong", "area": "Rawai", "name": "Next Point", "unit": "4 150 тыс. ฿ · студия 35 м²", "m2": "93 тыс. ฿/м²", "compl": "4 кв. 2028", "note": "Цена юнита указана в колонке «Studio» исходной таблицы."}, {"cluster": "Rawai / Nai Harn / Chalong", "area": "Rawai", "name": "Fantasea Rawai", "unit": "от 3 570 тыс. ฿ · 34 м²", "m2": "от 105 тыс. ฿/м²", "compl": "май 2028", "note": ""}, {"cluster": "Rawai / Nai Harn / Chalong", "area": "Chalong", "name": "Fantasea Chalong", "unit": "2 996 тыс. ฿ · 28 м²", "m2": "от 107 тыс. ฿/м²", "compl": "июль 2027", "note": ""}, {"cluster": "Rawai / Nai Harn / Chalong", "area": "Rawai", "name": "Space Odyssey", "unit": "3 200 тыс. ฿ · 29 м²", "m2": "110 тыс. ฿/м²", "compl": "начало 2028", "note": ""}, {"cluster": "Bang Tao / Cherngtalay", "area": "Bang Tao", "name": "Arise Vibe (Thalang)", "unit": "3 200 тыс. ฿ · 34 м²", "m2": "100 тыс. ฿/м²", "compl": "ноябрь 2026", "note": ""}, {"cluster": "Bang Tao / Cherngtalay", "area": "Bang Tao", "name": "Zero Bangtao", "unit": "6 100 тыс. ฿ · 36 м², с мебелью", "m2": "от 114 тыс. ฿/м²", "compl": "март 2027", "note": "Обе цены указаны в колонке «Цена за м²» исходной таблицы."}, {"cluster": "Bang Tao / Cherngtalay", "area": "Bang Tao", "name": "Siamese", "unit": "5 650 тыс. ฿ · 45 м², 1 BR", "m2": "127 тыс. ฿/м²", "compl": "3 кв. 2027", "note": ""}, {"cluster": "Layan", "area": "Layan", "name": "Layan Verde", "unit": "7 700 тыс. ฿ · студия 37 м²", "m2": "от 190 тыс. ฿/м²", "compl": "конец 2028", "note": "В исходной таблице район указан как Bang Tao; отнесён к Layan по названию проекта."}, {"cluster": "Layan", "area": "Layan", "name": "Garden of Edens", "unit": "от 12 млн ฿ · 50–62 м² (3-я фаза)", "m2": "от 190 тыс. ฿/м² (3-я фаза)", "compl": "1-я фаза — конец 2026", "note": ""}, {"cluster": "Kata", "area": "Kata", "name": "The Balance by the Beach", "unit": "5,5 млн ฿ · 38 м²", "m2": "130 тыс. ฿/м²", "compl": "июль 2027", "note": ""}, {"cluster": "Kata", "area": "Kata", "name": "Hennessy", "unit": "9,4 млн ฿ · 47 м²", "m2": "от 200 тыс. ฿/м²", "compl": "декабрь 2027", "note": ""}, {"cluster": "Karon", "area": "Karon", "name": "VIP Venus", "unit": "4 350 тыс. ฿ · 30 м²", "m2": "145 тыс. ฿/м²", "compl": "2026", "note": ""}, {"cluster": "Kamala", "area": "Kamala", "name": "The City", "unit": "от 6 210 тыс. ฿ · 46 м²", "m2": "от 135 тыс. ฿/м²", "compl": "май 2028", "note": "К цене за м² добавляется 5 тыс. ฿ за каждый этаж выше (leasehold)."}, {"cluster": "Nai Yang", "area": "Nai Yang", "name": "Zero Siluetta", "unit": "5 724 тыс. ฿ · 41 м², 1 BR", "m2": "от 125 тыс. ฿/м²", "compl": "июнь 2028", "note": ""}, {"cluster": "Patong", "area": "Patong", "name": "Abov Patong", "unit": "10 млн ฿ · 43,3 м², с личным бассейном", "m2": "232 тыс. ฿/м²", "compl": "резиденции — начало 2026", "note": ""}]</script>
+<script>
+(function(){
+  const P = JSON.parse(document.getElementById('projects').textContent);
+  const PICKS = JSON.parse(document.getElementById('picksdata').textContent);
+
+  const CLUSTERS = [
+    ['Rawai / Nai Harn / Chalong', ['Rawai','Nai Harn','Chalong']],
+    ['Bang Tao / Cherngtalay',     ['Bang Tao','Cherngtalay']],
+    ['Layan',                      ['Layan']],
+    ['Kata',                       ['Kata']],
+    ['Karon',                      ['Karon']],
+    ['Kamala',                     ['Kamala']],
+    ['Patong',                     ['Patong']],
+    ['Kathu',                      ['Kathu']],
+    ['Nai Yang',                   ['Nai Yang']],
+    ['Район не указан',            ['']]
+  ];
+  const vals = P.map(p=>p.m2n).filter(v=>typeof v==='number');
+  const LO = Math.min(...vals), HI = Math.max(...vals);
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  document.getElementById('c-proj').textContent = P.length;
+  document.getElementById('c-area').textContent =
+    new Set(P.map(p=>p.area).filter(Boolean)).size;
+
+  function barColor(v){
+    const t = (v-LO)/(HI-LO);
+    return t < .34 ? 'var(--bar-low)' : t < .67 ? 'var(--bar-mid)' : 'var(--bar-high)';
+  }
+
+  /* ---- подборка ---- */
+  const pw = document.getElementById('picks');
+  let cur = null, html = '';
+  PICKS.forEach(k=>{
+    if(k.cluster !== cur){
+      if(cur !== null) html += '</div></div>';
+      cur = k.cluster;
+      html += '<div class="pick-group"><p class="eyebrow">'+esc(cur)+'</p><div class="picks">';
+    }
+    html += '<article class="pick">'
+      + '<div class="nm">'+esc(k.name)+'<small>'+esc(k.area)+'</small></div>'
+      + '<div class="fig"><span class="k">Квартира от</span><span class="v hero">'+esc(k.unit)+'</span></div>'
+      + '<div class="fig"><span class="k">Цена за м² от</span><span class="v hero">'+esc(k.m2)+'</span></div>'
+      + '<div class="when">'+esc(k.compl)+'</div>'
+      + (k.note ? '<p class="pick-note">'+esc(k.note)+'</p>' : '')
+      + '</article>';
+  });
+  html += '</div></div>';
+  pw.innerHTML = html;
+
+  /* ---- каталог ---- */
+  const groups = [];
+  const used = new Set();
+  CLUSTERS.forEach(([title, areas])=>{
+    const g = P.filter(p=>!used.has(p.row) && areas.indexOf(p.area)>=0);
+    g.forEach(p=>used.add(p.row));
+    g.sort((a,b)=>{
+      const an = a.m2n==null, bn = b.m2n==null;
+      if(an!==bn) return an?1:-1;
+      if(!an && a.m2n!==b.m2n) return a.m2n-b.m2n;
+      return a.name.localeCompare(b.name,'ru');
+    });
+    if(g.length) groups.push({title, items:g});
+  });
+
+  const chips = document.getElementById('chips');
+  chips.innerHTML = '<button class="chip" aria-pressed="true" data-d="*">Все</button>' +
+    groups.map(g=>'<button class="chip" aria-pressed="false" data-d="'+esc(g.title)+'">'+esc(g.title)+'</button>').join('');
+
+  const list = document.getElementById('list');
+  let filterD = '*', onlyPrice = false, query = '';
+
+  function rowHTML(p, i){
+    const has = typeof p.m2n === 'number';
+    const pct = has ? Math.max(3, Math.round((p.m2n-LO)/(HI-LO)*100)) : 0;
+    const m2 = has
+      ? '<b>'+p.m2n+' <span class="u">тыс. ฿/м²</span></b><span class="bar"><i style="width:'+pct+'%;background:'+barColor(p.m2n)+'"></i></span>'
+      : '<span class="na">'+(p.m2 ? esc(p.m2.split('\n')[0]) : 'цены за м² нет')+'</span>';
+    const unit = p.unit ? '<div class="unitp">'+esc(p.unit)+'</div>'
+                        : '<div class="unitp none">цены квартиры нет</div>';
+    const det = [
+      ['Застройщик', p.dev], ['Срок сдачи', p.compl], ['Тип', p.type],
+      ['Форма владения', p.own], ['Вид на море', p.sea],
+      ['Цена за м² — как в таблице', p.m2], ['Акции', p.promo]
+    ].filter(([,v])=>v && String(v).trim())
+     .map(([k,v])=>'<div'+(String(v).length>90?' class="full"':'')+'><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>').join('');
+    return '<details class="row"><summary>'
+      + '<span class="rank mono">'+i+'</span>'
+      + '<span class="pname">'+esc(p.name)+(p.area?'<em>'+esc(p.area)+'</em>':'')+'</span>'
+      + '<span class="m2">'+m2+'</span>'
+      + unit
+      + '<span class="when2">'+esc(p.compl||'')+'</span>'
+      + '<span class="caret">▸</span>'
+      + '</summary><dl class="detail">'+(det||'<div><dd>В таблице по этому проекту пока нет дополнительных данных.</dd></div>')+'</dl></details>';
+  }
+
+  function render(){
+    const q = query.trim().toLowerCase();
+    let out = '', shown = 0;
+    groups.forEach(g=>{
+      if(filterD !== '*' && filterD !== g.title) return;
+      let items = g.items;
+      if(onlyPrice) items = items.filter(p=>typeof p.m2n==='number');
+      if(q) items = items.filter(p=>(p.name+' '+p.dev+' '+p.area).toLowerCase().includes(q));
+      if(!items.length) return;
+      shown += items.length;
+      const nums = items.map(p=>p.m2n).filter(v=>typeof v==='number');
+      const range = nums.length
+        ? (nums.length>1 ? nums[0]+'–'+nums[nums.length-1]+' тыс. ฿/м²' : nums[0]+' тыс. ฿/м²')
+        : 'цен за м² нет';
+      out += '<div class="district" id="d-'+encodeURIComponent(g.title)+'">'
+        + '<div class="d-head"><h3>'+esc(g.title)+'</h3>'
+        + '<span class="meta">'+items.length+' проект.  ·  '+range+'</span></div>'
+        + '<div class="rows">' + items.map((p,i)=>rowHTML(p,i+1)).join('') + '</div></div>';
+    });
+    list.innerHTML = out || '<p class="empty">Ничего не найдено. Попробуйте изменить запрос или снять фильтры.</p>';
+  }
+
+  chips.addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    filterD = b.dataset.d;
+    chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
+    render();
+  });
+  document.getElementById('only-price').addEventListener('click', e=>{
+    onlyPrice = !onlyPrice; e.currentTarget.setAttribute('aria-pressed', String(onlyPrice)); render();
+  });
+  document.getElementById('q').addEventListener('input', e=>{ query = e.target.value; render(); });
+
+  render();
+})();
+</script>
