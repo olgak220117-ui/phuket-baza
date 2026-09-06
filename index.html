@@ -102,6 +102,8 @@ section.lead{margin-top:30px}
   display:grid; grid-template-columns:minmax(300px,420px) minmax(0,1fr); gap:26px;
   align-items:start; margin-top:22px;
 }
+.map-filter{margin-bottom:10px}
+.map-filter .chip{font-size:12px; padding:5px 10px}
 .mapbox{
   position:relative; background:var(--surface); border:1px solid var(--line);
   border-radius:var(--r); padding:10px 6px;
@@ -307,6 +309,10 @@ footer li{margin:4px 0}
     <p class="sec-note">Нажмите на район — справа появится список его проектов с ценой квартиры от и ценой за м². Размер точки — сколько проектов в районе, цвет — насколько дорогой район по цене за м².</p>
     <div class="mapwrap">
       <div>
+        <div class="ctl-row map-filter">
+          <span class="ctl-label" id="lbl-mt">Тип</span>
+          <div class="chips" id="mtchips" role="group" aria-labelledby="lbl-mt"></div>
+        </div>
         <div class="mapbox" id="mapbox"></div>
         <div class="map-legend">
           <span><i style="background:var(--bar-low)"></i>до 130 тыс. ฿/м²</span>
@@ -651,15 +657,34 @@ footer li{margin:4px 0}
   const mpSum  = document.getElementById('mp-sum');
   const mpList = document.getElementById('mp-list');
 
-  // группируем проекты по району
-  const byArea = {};
-  P.forEach(p=>{ if(GEO[p.area]) (byArea[p.area] = byArea[p.area] || []).push(p); });
-  Object.values(byArea).forEach(a => a.sort((x,y)=>{
+  // группируем проекты по району; фильтр по типу применяется поверх
+  let mapType = '*';
+  const byPrice = (x,y)=>{
     const xn = x.m2n == null, yn = y.m2n == null;
     if(xn !== yn) return xn ? 1 : -1;
     if(!xn && x.m2n !== y.m2n) return x.m2n - y.m2n;
     return x.name.localeCompare(y.name,'ru');
-  }));
+  };
+  const allByArea = {};
+  P.forEach(p=>{ if(GEO[p.area]) (allByArea[p.area] = allByArea[p.area] || []).push(p); });
+  Object.values(allByArea).forEach(a => a.sort(byPrice));
+
+  // список района с учётом выбранного типа
+  const areaList = area =>
+    (allByArea[area] || []).filter(p => mapType === '*' || typeTest(mapType)(p));
+
+  const mtchips = document.getElementById('mtchips');
+  function buildTypeChips(){
+    const inMap = P.filter(p=>GEO[p.area]);
+    mtchips.innerHTML = '<button class="chip" aria-pressed="true" data-t="*">Все типы <span class="cnt">'
+      + inMap.length + '</span></button>'
+      + TYPES.map(([k,label,test])=>{
+          const n = inMap.filter(test).length;
+          return n ? '<button class="chip" aria-pressed="false" data-t="' + k + '">'
+            + esc(label) + ' <span class="cnt">' + n + '</span></button>' : '';
+        }).join('');
+  }
+  buildTypeChips();
 
   const minM2 = a => { const v = a.map(p=>p.m2n).filter(n=>typeof n === 'number'); return v.length ? Math.min(...v) : null; };
   function areaColor(a){
@@ -679,8 +704,7 @@ footer li{margin:4px 0}
 
     // сначала районы — по ним считаем только проекты без собственной точки
     Object.keys(GEO).forEach(area=>{
-      const all = byArea[area]; if(!all) return;
-      const list = all.filter(p=>!coordsOf(p));
+      const list = areaList(area).filter(p=>!coordsOf(p));
       if(!list.length) return;
       const [lat,lng,side] = GEO[area];
       const [x,y] = PROJ(lat,lng);
@@ -697,6 +721,8 @@ footer li{margin:4px 0}
 
     // затем точные точки проектов — поверх районных
     P.forEach(p=>{
+      if(!GEO[p.area]) return;
+      if(mapType !== '*' && !typeTest(mapType)(p)) return;
       const c = coordsOf(p); if(!c) return;
       const [x,y] = PROJ(c.lat, c.lng);
       svg += '<g class="pin exact" data-project="' + p.row + '" tabindex="0" role="button"'
@@ -716,7 +742,7 @@ footer li{margin:4px 0}
   drawMap();
 
   function showArea(area){
-    const list = byArea[area] || [];
+    const list = areaList(area);
     currentArea = area;
     mapBox.querySelectorAll('.pin').forEach(g=>g.classList.toggle('on', g.dataset.area === area));
     mpName.textContent = area;
@@ -724,6 +750,10 @@ footer li{margin:4px 0}
     mpSum.innerHTML = list.length + ' проект.  ·  '
       + (m == null ? 'цен за м² нет' : 'от ' + m + ' тыс. ฿/м²')
       + '  ·  ' + locLink(area, '');
+    if(!list.length){
+      mpList.innerHTML = '<p class="empty">В этом районе нет проектов выбранного типа.</p>';
+      return;
+    }
     mpList.innerHTML = list.map((p,i)=>
       '<div class="mp-item">'
       + '<span class="n">' + (i+1) + '</span>'
@@ -755,7 +785,20 @@ footer li{margin:4px 0}
   });
 
   // район с наибольшим числом проектов открыт сразу, чтобы панель не пустовала
-  showArea(Object.keys(byArea).sort((a,b)=>byArea[b].length - byArea[a].length)[0] || 'Bang Tao');
+  const biggest = () => Object.keys(allByArea)
+    .filter(a => areaList(a).length)
+    .sort((a,b)=>areaList(b).length - areaList(a).length)[0];
+
+  mtchips.addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    mapType = b.dataset.t;
+    mtchips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c === b)));
+    drawMap();
+    // если в открытом районе не осталось проектов этого типа — переходим к самому крупному
+    showArea(areaList(currentArea).length ? currentArea : (biggest() || currentArea));
+  });
+
+  showArea(biggest() || 'Bang Tao');
 
   // ---- ссылки владельца: ввод, сохранение, живое обновление ----
   function setState(box, text, cls){
