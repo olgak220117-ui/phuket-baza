@@ -578,12 +578,6 @@ footer li{margin:4px 0}
   list.addEventListener('click', e=>{
     if(e.target.closest('a.loc')) e.stopPropagation();
   });
-  mpSum.addEventListener('click', e=>{
-    if(e.target.closest('a.loc')) e.stopPropagation();
-  });
-  mpList.addEventListener('click', e=>{
-    if(e.target.closest('a.loc')) e.stopPropagation();
-  });
 
   render();
 
@@ -678,6 +672,10 @@ footer li{margin:4px 0}
       + locLink(p.name, p.area)
       + '</div>').join('');
   }
+
+  // клик по ссылке на карту не должен выбирать район заново
+  mpSum.addEventListener('click', e=>{ if(e.target.closest('a.loc')) e.stopPropagation(); });
+  mpList.addEventListener('click', e=>{ if(e.target.closest('a.loc')) e.stopPropagation(); });
 
   mapBox.addEventListener('click', e=>{
     if(e.target.closest('a.loc')) return;
