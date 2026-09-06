@@ -111,6 +111,8 @@ section.lead{margin-top:30px}
 .pin{cursor:pointer}
 .pin circle.dot{stroke:var(--surface); stroke-width:1.6; transition:r .12s}
 .pin:hover circle.dot, .pin.on circle.dot{stroke:var(--ink); stroke-width:2}
+.pin.exact circle.dot{stroke:var(--surface); stroke-width:1.4}
+.pin.exact:hover circle.dot{stroke:var(--ink)}
 .pin text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px;
   font-weight:600; letter-spacing:.07em; fill:var(--ink-2)}
 .pin.on text{fill:var(--ink)}
@@ -311,8 +313,9 @@ footer li{margin:4px 0}
           <span><i style="background:var(--bar-mid)"></i>130–180</span>
           <span><i style="background:var(--bar-high)"></i>от 180</span>
           <span><i style="background:var(--line-strong)"></i>цен за м² нет</span>
+          <span>маленькая точка — проект с вашей координатой</span>
         </div>
-        <p class="map-note">Схема острова нарисована приближённо, а точки поставлены по координатам центров районов — это обзорная карта распределения цен, а не точный адрес проекта. Точный адрес открывает кнопка «Локация» в каталоге ниже.</p>
+        <p class="map-note">Схема острова нарисована приближённо, а точки поставлены по координатам центров районов — это обзорная карта распределения цен, а не точный адрес проекта. Чтобы поставить проект на карту точно, впишите его координаты в поле «Точка на карте» в раскрытой строке каталога — он сразу получит свой пин.</p>
       </div>
       <div class="mappanel">
         <div class="mp-head"><h3 id="mp-name">—</h3><span class="mp-sum" id="mp-sum"></span></div>
@@ -405,6 +408,29 @@ footer li{margin:4px 0}
     + '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
     + '<path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>';
 
+  // Принимаем и «7.9985, 98.2913», и ссылку Google Maps: из неё берём
+  // либо @lat,lng, либо пару !3dlat!4dlng, либо параметр query=lat,lng.
+  function parseCoords(v){
+    const t = String(v || '').trim();
+    if(!t) return null;
+    const pats = [
+      /^(-?\d{1,2}\.\d{3,})\s*,\s*(\d{2,3}\.\d{3,})$/,
+      /!3d(-?\d{1,2}\.\d{3,})!4d(\d{2,3}\.\d{3,})/,   // сама точка важнее центра экрана
+      /@(-?\d{1,2}\.\d{3,}),(\d{2,3}\.\d{3,})/,
+      /[?&]query=(-?\d{1,2}\.\d{3,})%2C(\d{2,3}\.\d{3,})/i,
+      /[?&]query=(-?\d{1,2}\.\d{3,}),\s*(\d{2,3}\.\d{3,})/i
+    ];
+    for(const re of pats){
+      const m = t.match(re);
+      if(m){
+        const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+        // грубая рамка Пхукета — отсекает случайно вставленное не то
+        if(lat > 7.6 && lat < 8.3 && lng > 98.1 && lng < 98.6) return {lat, lng};
+      }
+    }
+    return null;
+  }
+
   function isUrl(v){
     return /^https?:\/\/\S+$/i.test(String(v || '').trim());
   }
@@ -415,7 +441,12 @@ footer li{margin:4px 0}
 
   // Ссылка ведёт на поиск Google Maps по названию проекта и району.
   // Точных координат в таблице нет, поэтому это поиск, а не закреплённая точка.
-  function locLink(name, area, cls){
+  function locLink(name, area, cls, coords){
+    if(coords){
+      return '<a class="loc ' + (cls || '') + '" target="_blank" rel="noopener noreferrer"'
+        + ' href="https://www.google.com/maps/search/?api=1&query=' + coords.lat + '%2C' + coords.lng + '"'
+        + ' title="Точка проекта «' + esc(name) + '» на карте">' + PIN + 'Локация</a>';
+    }
     const q = encodeURIComponent([name, area, 'Phuket'].filter(Boolean).join(', '));
     return '<a class="loc ' + (cls || '') + '" target="_blank" rel="noopener noreferrer"'
       + ' href="https://www.google.com/maps/search/?api=1&query=' + q + '"'
@@ -506,11 +537,16 @@ footer li{margin:4px 0}
       const val = lk[name] || '';
       return '<div class="lk"><label for="' + key + '-' + name + '">' + label + '</label>'
         + '<div class="lk-in">'
-        + '<input id="' + key + '-' + name + '" type="url" inputmode="url" spellcheck="false"'
+        + '<input id="' + key + '-' + name + '" type="' + (name === 'geo' ? 'text' : 'url') + '" spellcheck="false"'
         + ' data-key="' + key + '" data-field="' + name + '"'
         + ' placeholder="' + ph + '" value="' + esc(val) + '"' + (dbReady ? '' : ' disabled') + '>'
-        + '<a class="go" target="_blank" rel="noopener noreferrer" href="' + esc(val) + '"'
-        + (isUrl(val) ? '' : ' hidden') + ' title="Открыть ссылку">' + OPEN_ICON + '</a>'
+        + (name === 'geo'
+            ? (() => { const c = parseCoords(val);
+                return '<a class="go" target="_blank" rel="noopener noreferrer"'
+                  + ' href="' + (c ? 'https://www.google.com/maps/search/?api=1&query=' + c.lat + '%2C' + c.lng : '') + '"'
+                  + (c ? '' : ' hidden') + ' title="Проверить точку на карте">' + OPEN_ICON + '</a>'; })()
+            : '<a class="go" target="_blank" rel="noopener noreferrer" href="' + esc(val) + '"'
+              + (isUrl(val) ? '' : ' hidden') + ' title="Открыть ссылку">' + OPEN_ICON + '</a>')
         + '</div></div>';
     };
     const linksBlock = '<div class="links" data-key="' + key + '">'
@@ -520,6 +556,7 @@ footer li{margin:4px 0}
           : 'сохранение недоступно — откройте страницу по ссылке артефакта') + '</span></div>'
       + field('drive', 'Папка на Google Диске', 'https://drive.google.com/...')
       + field('price', 'Прайс-лист',            'https://...')
+      + field('geo',   'Точка на карте',        '7.9985, 98.2913 или ссылка Google Maps')
       + '</div>';
     return '<details class="row"><summary>'
       + '<span class="rank mono">'+i+'</span>'
@@ -527,7 +564,7 @@ footer li{margin:4px 0}
       + '<span class="m2">'+m2+'</span>'
       + unit
       + '<span class="when2">'+esc(p.compl||'')+'</span>'
-      + locLink(p.name, p.area)
+      + locLink(p.name, p.area, '', parseCoords(lk.geo))
       + '<span class="caret">▸</span>'
       + '</summary><dl class="detail">'
       + (det || '<div><dd>В таблице по этому проекту пока нет дополнительных данных.</dd></div>')
@@ -632,28 +669,55 @@ footer li{margin:4px 0}
   }
 
   const coastPts = COAST.map(([la,ln])=>PROJ(la,ln).map(v=>v.toFixed(1)).join(',')).join(' ');
-  let svg = '<svg viewBox="0 0 380 780" role="img" aria-label="Схема Пхукета с районами, где есть проекты">'
-    + '<polygon class="isle" points="' + coastPts + '"/>';
 
-  Object.keys(GEO).forEach(area=>{
-    const list = byArea[area]; if(!list) return;
-    const [lat,lng,side] = GEO[area];
-    const [x,y] = PROJ(lat,lng);
-    const r = Math.max(5, Math.min(15, 4 + Math.sqrt(list.length) * 2.1));
-    const tx = side === 'left' ? x - r - 7 : x + r + 7;
-    svg += '<g class="pin" data-area="' + esc(area) + '" tabindex="0" role="button"'
-      + ' aria-label="' + esc(area) + ', проектов: ' + list.length + '">'
-      + '<circle class="dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1)
-      + '" fill="' + areaColor(list) + '"/>'
-      + '<text x="' + tx.toFixed(1) + '" y="' + (y + 3.4).toFixed(1) + '"'
-      + ' text-anchor="' + (side === 'left' ? 'end' : 'start') + '">'
-      + esc(area.toUpperCase()) + ' · ' + list.length + '</text></g>';
-  });
-  svg += '</svg>';
-  mapBox.innerHTML = svg;
+  // Координаты проекта, если вы их вписали в его карточке.
+  const coordsOf = p => parseCoords((LINKS['p' + p.row] || {}).geo);
+
+  function drawMap(){
+    let svg = '<svg viewBox="0 0 380 780" role="img" aria-label="Схема Пхукета с районами и проектами">'
+      + '<polygon class="isle" points="' + coastPts + '"/>';
+
+    // сначала районы — по ним считаем только проекты без собственной точки
+    Object.keys(GEO).forEach(area=>{
+      const all = byArea[area]; if(!all) return;
+      const list = all.filter(p=>!coordsOf(p));
+      if(!list.length) return;
+      const [lat,lng,side] = GEO[area];
+      const [x,y] = PROJ(lat,lng);
+      const r = Math.max(5, Math.min(15, 4 + Math.sqrt(list.length) * 2.1));
+      const tx = side === 'left' ? x - r - 7 : x + r + 7;
+      svg += '<g class="pin" data-area="' + esc(area) + '" tabindex="0" role="button"'
+        + ' aria-label="' + esc(area) + ', проектов: ' + list.length + '">'
+        + '<circle class="dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1)
+        + '" fill="' + areaColor(list) + '"/>'
+        + '<text x="' + tx.toFixed(1) + '" y="' + (y + 3.4).toFixed(1) + '"'
+        + ' text-anchor="' + (side === 'left' ? 'end' : 'start') + '">'
+        + esc(area.toUpperCase()) + ' · ' + list.length + '</text></g>';
+    });
+
+    // затем точные точки проектов — поверх районных
+    P.forEach(p=>{
+      const c = coordsOf(p); if(!c) return;
+      const [x,y] = PROJ(c.lat, c.lng);
+      svg += '<g class="pin exact" data-project="' + p.row + '" tabindex="0" role="button"'
+        + ' aria-label="' + esc(p.name) + ', точная точка">'
+        + '<circle class="dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4.6" fill="'
+        + (typeof p.m2n === 'number' ? barColor(p.m2n) : 'var(--line-strong)') + '"/>'
+        + '<title>' + esc(p.name) + (typeof p.m2n === 'number' ? ' — ' + p.m2n + ' тыс. ฿/м²' : '')
+        + '</title></g>';
+    });
+
+    svg += '</svg>';
+    mapBox.innerHTML = svg;
+    if(currentArea) mapBox.querySelectorAll('.pin').forEach(g=>
+      g.classList.toggle('on', g.dataset.area === currentArea));
+  }
+  let currentArea = null;
+  drawMap();
 
   function showArea(area){
     const list = byArea[area] || [];
+    currentArea = area;
     mapBox.querySelectorAll('.pin').forEach(g=>g.classList.toggle('on', g.dataset.area === area));
     mpName.textContent = area;
     const m = minM2(list);
@@ -669,7 +733,7 @@ footer li{margin:4px 0}
       + (typeof p.m2n === 'number'
           ? '<span class="pm">' + p.m2n + ' тыс. ฿/м²</span>'
           : '<span class="pm none">за м² нет</span>')
-      + locLink(p.name, p.area)
+      + locLink(p.name, p.area, '', coordsOf(p))
       + '</div>').join('');
   }
 
@@ -679,7 +743,10 @@ footer li{margin:4px 0}
 
   mapBox.addEventListener('click', e=>{
     if(e.target.closest('a.loc')) return;
-    const g = e.target.closest('.pin'); if(g) showArea(g.dataset.area);
+    const g = e.target.closest('.pin'); if(!g) return;
+    if(g.dataset.area) { showArea(g.dataset.area); return; }
+    const proj = P.find(p=>String(p.row) === g.dataset.project);
+    if(proj && proj.area) showArea(proj.area);
   });
   mapBox.addEventListener('keydown', e=>{
     if(e.key !== 'Enter' && e.key !== ' ') return;
@@ -702,8 +769,15 @@ footer li{margin:4px 0}
     const inp = e.target.closest('.lk input'); if(!inp) return;
     const go = inp.parentElement.querySelector('.go');
     const v = inp.value.trim();
-    go.hidden = !isUrl(v);
-    if(!go.hidden) go.href = v;
+    if(inp.dataset.field === 'geo'){
+      const c = parseCoords(v);
+      go.hidden = !c;
+      if(c) go.href = 'https://www.google.com/maps/search/?api=1&query=' + c.lat + '%2C' + c.lng;
+      inp.style.borderColor = (v && !c) ? 'var(--bar-high)' : '';
+    } else {
+      go.hidden = !isUrl(v);
+      if(!go.hidden) go.href = v;
+    }
   });
 
   list.addEventListener('change', async e=>{
@@ -717,6 +791,7 @@ footer li{margin:4px 0}
     try{
       await dbRef.doc(key).set(Object.assign({}, LINKS[key], {updatedAt: new Date().toISOString()}));
       setState(box, 'сохранено', 'ok');
+      if(fieldName === 'geo') drawMap();
     }catch(err){
       setState(box, err && err.code === 'not_granted'
         ? 'нет прав на запись — это копия только для чтения'
@@ -733,8 +808,14 @@ footer li{margin:4px 0}
       if(inp.value !== v){
         inp.value = v;
         const go = inp.parentElement.querySelector('.go');
-        go.hidden = !isUrl(v);
-        if(!go.hidden) go.href = v;
+        if(inp.dataset.field === 'geo'){
+          const c = parseCoords(v);
+          go.hidden = !c;
+          if(c) go.href = 'https://www.google.com/maps/search/?api=1&query=' + c.lat + '%2C' + c.lng;
+        } else {
+          go.hidden = !isUrl(v);
+          if(!go.hidden) go.href = v;
+        }
       }
       inp.disabled = !dbReady;
     });
@@ -753,6 +834,7 @@ footer li{margin:4px 0}
     dbRef.onSnapshot(snap=>{
       snap.docs.forEach(d=>{ LINKS[d.id] = d.data() || {}; });
       applyLinks();
+      drawMap();
     }, () => { /* подписка умерла — уже введённое не теряем */ });
     applyLinks();
   }).catch(()=>{});
