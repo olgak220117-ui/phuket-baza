@@ -88,7 +88,8 @@ section.lead{margin-top:30px}
 .fig .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:block}
 .fig .v{font-family:"IBM Plex Mono",monospace; font-size:14px; font-variant-numeric:tabular-nums}
 .fig .v.hero{font-size:15px; font-weight:600}
-.pick .when{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); white-space:nowrap}
+.pick .when{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); white-space:nowrap;
+  display:flex; flex-direction:column; align-items:flex-start; gap:2px}
 .pick-note{grid-column:1/-1; font-size:12.5px; color:var(--muted); border-left:2px solid var(--accent-line);
   padding-left:10px; margin-top:4px; font-style:italic}
 
@@ -150,6 +151,19 @@ input[type=search]:focus-visible, .chip:focus-visible, .toggle:focus-visible, su
 .unitp.none{color:var(--muted)}
 .when2{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted);
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.loc{
+  display:inline-flex; align-items:center; gap:5px; justify-self:start;
+  font-family:"IBM Plex Sans",sans-serif; font-size:12px; line-height:1;
+  padding:6px 10px 6px 8px; border-radius:999px; white-space:nowrap;
+  border:1px solid var(--accent-line); color:var(--accent);
+  background:var(--accent-soft); text-decoration:none;
+}
+.loc:hover{background:var(--accent); border-color:var(--accent); color:#fff}
+:root[data-theme="dark"] .loc:hover{color:#08201d}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .loc:hover{color:#08201d}}
+.loc:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.loc svg{width:11px; height:11px; flex:none}
+.pick .loc{margin-top:6px}
 .caret{color:var(--muted); font-size:11px; transition:transform .15s}
 .row[open] .caret{transform:rotate(90deg)}
 .detail{padding:4px 4px 20px 60px; display:grid;
@@ -172,6 +186,7 @@ footer li{margin:4px 0}
   .pick .when{grid-column:1/-1}
   .row > summary{grid-template-columns:30px 1fr 130px; }
   .row > summary .unitp{grid-column:2/-1}
+  .row > summary .loc{grid-column:2/-1; margin-top:2px}
   .row > summary .when2, .row > summary .caret{display:none}
   .detail{padding-left:4px}
 }
@@ -269,6 +284,19 @@ footer li{margin:4px 0}
   document.getElementById('c-area').textContent =
     new Set(P.map(p=>p.area).filter(Boolean)).size;
 
+  const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" '
+    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+  // Ссылка ведёт на поиск Google Maps по названию проекта и району.
+  // Точных координат в таблице нет, поэтому это поиск, а не закреплённая точка.
+  function locLink(name, area, cls){
+    const q = encodeURIComponent([name, area, 'Phuket'].filter(Boolean).join(', '));
+    return '<a class="loc ' + (cls || '') + '" target="_blank" rel="noopener noreferrer"'
+      + ' href="https://www.google.com/maps/search/?api=1&query=' + q + '"'
+      + ' title="Открыть «' + esc(name) + '» на Google Maps">' + PIN + 'Локация</a>';
+  }
+
   function barColor(v){
     const t = (v-LO)/(HI-LO);
     return t < .34 ? 'var(--bar-low)' : t < .67 ? 'var(--bar-mid)' : 'var(--bar-high)';
@@ -287,7 +315,7 @@ footer li{margin:4px 0}
       + '<div class="nm">'+esc(k.name)+'<small>'+esc(k.area)+'</small></div>'
       + '<div class="fig"><span class="k">Квартира от</span><span class="v hero">'+esc(k.unit)+'</span></div>'
       + '<div class="fig"><span class="k">Цена за м² от</span><span class="v hero">'+esc(k.m2)+'</span></div>'
-      + '<div class="when">'+esc(k.compl)+'</div>'
+      + '<div class="when">'+esc(k.compl)+'<br>'+locLink(k.name, k.area)+'</div>'
       + (k.note ? '<p class="pick-note">'+esc(k.note)+'</p>' : '')
       + '</article>';
   });
@@ -353,6 +381,7 @@ footer li{margin:4px 0}
       + '<span class="m2">'+m2+'</span>'
       + unit
       + '<span class="when2">'+esc(p.compl||'')+'</span>'
+      + locLink(p.name, p.area)
       + '<span class="caret">▸</span>'
       + '</summary><dl class="detail">'+(det||'<div><dd>В таблице по этому проекту пока нет дополнительных данных.</dd></div>')+'</dl></details>';
   }
@@ -396,6 +425,11 @@ footer li{margin:4px 0}
     onlyPrice = !onlyPrice; e.currentTarget.setAttribute('aria-pressed', String(onlyPrice)); render();
   });
   document.getElementById('q').addEventListener('input', e=>{ query = e.target.value; render(); });
+
+  // Клик по «Локации» открывает карту и не разворачивает строку.
+  list.addEventListener('click', e=>{
+    if(e.target.closest('a.loc')) e.stopPropagation();
+  });
 
   render();
 })();
