@@ -172,6 +172,40 @@ input[type=search]:focus-visible, .chip:focus-visible, .toggle:focus-visible, su
 .detail dd{margin:0; font-size:13.5px; color:var(--ink-2); white-space:pre-line}
 .detail .full{grid-column:1/-1}
 
+.links{
+  grid-column:1/-1; margin-top:6px; padding:14px 16px;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r);
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px 20px;
+}
+.links .lk-head{
+  grid-column:1/-1; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; font-weight:600;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--muted);
+}
+.links .lk-state{font-size:11px; letter-spacing:.04em; text-transform:none; font-weight:400}
+.links .lk-state.ok{color:var(--accent)}
+.links .lk-state.err{color:var(--bar-high)}
+.lk{display:flex; flex-direction:column; gap:5px}
+.lk label{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.lk .lk-in{display:flex; gap:6px; align-items:center}
+.lk input{
+  flex:1 1 auto; min-width:0; font:inherit; font-size:13px; padding:7px 10px;
+  border:1px solid var(--line-strong); border-radius:8px;
+  background:var(--surface); color:var(--ink);
+}
+.lk input::placeholder{color:var(--muted); opacity:.75}
+.lk input:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.lk input:disabled{opacity:.55; cursor:not-allowed}
+.lk .go{
+  flex:none; display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:8px; text-decoration:none;
+  border:1px solid var(--accent-line); background:var(--accent-soft); color:var(--accent);
+}
+.lk .go[hidden]{display:none}
+.lk .go:hover{background:var(--accent); border-color:var(--accent); color:#fff}
+:root[data-theme="dark"] .lk .go:hover{color:#08201d}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lk .go:hover{color:#08201d}}
+.lk .go svg{width:13px; height:13px}
 .empty{padding:30px 4px; color:var(--muted); font-size:14px}
 
 footer{margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
@@ -284,6 +318,20 @@ footer li{margin:4px 0}
   document.getElementById('c-area').textContent =
     new Set(P.map(p=>p.area).filter(Boolean)).size;
 
+  // Ссылки, которые добавляет владелец базы. Живут в хранилище артефакта,
+  // а не в HTML, поэтому переживают перезагрузку и правки страницы.
+  const LINKS = {};
+  let dbRef = null, dbReady = false;
+
+  const OPEN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" '
+    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
+    + '<path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>';
+
+  function isUrl(v){
+    return /^https?:\/\/\S+$/i.test(String(v || '').trim());
+  }
+
   const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" '
     + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
     + '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
@@ -375,6 +423,27 @@ footer li{margin:4px 0}
       ['Цена за м² — как в таблице', p.m2], ['Акции', p.promo]
     ].filter(([,v])=>v && String(v).trim())
      .map(([k,v])=>'<div'+(String(v).length>90?' class="full"':'')+'><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>').join('');
+    const key = 'p' + p.row;
+    const lk = LINKS[key] || {};
+    const field = (name, label, ph) => {
+      const val = lk[name] || '';
+      return '<div class="lk"><label for="' + key + '-' + name + '">' + label + '</label>'
+        + '<div class="lk-in">'
+        + '<input id="' + key + '-' + name + '" type="url" inputmode="url" spellcheck="false"'
+        + ' data-key="' + key + '" data-field="' + name + '"'
+        + ' placeholder="' + ph + '" value="' + esc(val) + '"' + (dbReady ? '' : ' disabled') + '>'
+        + '<a class="go" target="_blank" rel="noopener noreferrer" href="' + esc(val) + '"'
+        + (isUrl(val) ? '' : ' hidden') + ' title="Открыть ссылку">' + OPEN_ICON + '</a>'
+        + '</div></div>';
+    };
+    const linksBlock = '<div class="links" data-key="' + key + '">'
+      + '<div class="lk-head">Мои ссылки по проекту'
+      + '<span class="lk-state">' + (dbReady
+          ? 'сохраняется автоматически'
+          : 'сохранение недоступно — откройте страницу по ссылке артефакта') + '</span></div>'
+      + field('drive', 'Папка на Google Диске', 'https://drive.google.com/...')
+      + field('price', 'Прайс-лист',            'https://...')
+      + '</div>';
     return '<details class="row"><summary>'
       + '<span class="rank mono">'+i+'</span>'
       + '<span class="pname">'+esc(p.name)+(p.area?'<em>'+esc(p.area)+'</em>':'')+'</span>'
@@ -383,7 +452,9 @@ footer li{margin:4px 0}
       + '<span class="when2">'+esc(p.compl||'')+'</span>'
       + locLink(p.name, p.area)
       + '<span class="caret">▸</span>'
-      + '</summary><dl class="detail">'+(det||'<div><dd>В таблице по этому проекту пока нет дополнительных данных.</dd></div>')+'</dl></details>';
+      + '</summary><dl class="detail">'
+      + (det || '<div><dd>В таблице по этому проекту пока нет дополнительных данных.</dd></div>')
+      + linksBlock + '</dl></details>';
   }
 
   function render(){
@@ -432,5 +503,72 @@ footer li{margin:4px 0}
   });
 
   render();
+
+  // ---- ссылки владельца: ввод, сохранение, живое обновление ----
+  function setState(box, text, cls){
+    const el = box && box.querySelector('.lk-state');
+    if(!el) return;
+    el.textContent = text;
+    el.className = 'lk-state' + (cls ? ' ' + cls : '');
+  }
+
+  list.addEventListener('input', e=>{
+    const inp = e.target.closest('.lk input'); if(!inp) return;
+    const go = inp.parentElement.querySelector('.go');
+    const v = inp.value.trim();
+    go.hidden = !isUrl(v);
+    if(!go.hidden) go.href = v;
+  });
+
+  list.addEventListener('change', async e=>{
+    const inp = e.target.closest('.lk input'); if(!inp) return;
+    const key = inp.dataset.key, fieldName = inp.dataset.field;
+    const value = inp.value.trim();
+    const box = inp.closest('.links');
+    LINKS[key] = Object.assign({}, LINKS[key], {[fieldName]: value});
+    if(!dbRef){ setState(box, 'сохранение недоступно', 'err'); return; }
+    setState(box, 'сохраняю…');
+    try{
+      await dbRef.doc(key).set(Object.assign({}, LINKS[key], {updatedAt: new Date().toISOString()}));
+      setState(box, 'сохранено', 'ok');
+    }catch(err){
+      setState(box, err && err.code === 'not_granted'
+        ? 'нет прав на запись — это копия только для чтения'
+        : 'не сохранилось, попробуйте ещё раз', 'err');
+    }
+  });
+
+  // Точечно обновляем поля, не перерисовывая список: иначе схлопнутся
+  // раскрытые строки и собьётся фокус во время набора.
+  function applyLinks(){
+    document.querySelectorAll('.lk input').forEach(inp=>{
+      if(inp === document.activeElement) return;
+      const v = (LINKS[inp.dataset.key] || {})[inp.dataset.field] || '';
+      if(inp.value !== v){
+        inp.value = v;
+        const go = inp.parentElement.querySelector('.go');
+        go.hidden = !isUrl(v);
+        if(!go.hidden) go.href = v;
+      }
+      inp.disabled = !dbReady;
+    });
+    document.querySelectorAll('.links .lk-state').forEach(el=>{
+      if(el.classList.contains('ok') || el.classList.contains('err')) return;
+      el.textContent = dbReady
+        ? 'сохраняется автоматически'
+        : 'сохранение недоступно — откройте страницу по ссылке артефакта';
+    });
+  }
+
+  claude.use('db').then(db=>{
+    if(!db) return;                       // хранилище недоступно — поля остаются выключенными
+    dbRef = db.collection('links');
+    dbReady = true;
+    dbRef.onSnapshot(snap=>{
+      snap.docs.forEach(d=>{ LINKS[d.id] = d.data() || {}; });
+      applyLinks();
+    }, () => { /* подписка умерла — уже введённое не теряем */ });
+    applyLinks();
+  }).catch(()=>{});
 })();
 </script>
