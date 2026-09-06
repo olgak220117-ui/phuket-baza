@@ -246,7 +246,7 @@ input[type=search]:focus-visible, .chip:focus-visible, .toggle:focus-visible, su
 @media (max-width:820px){ .detail{padding-left:4px} }
 
 .links{
-  grid-column:1/-1; margin-top:6px; padding:14px 16px;
+  margin:0 0 18px; padding:14px 16px;
   background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r);
   display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px 20px;
 }
@@ -563,13 +563,13 @@ footer li{margin:4px 0}
     const unit = unitV ? '<div class="unitp">'+esc(unitV)+'</div>'
                        : '<div class="unitp none">цены квартиры нет</div>';
     const nEdits = Object.keys(editsOf(p)).length;
-    const det = '<div class="d-toolbar">'
+    const toolbar = '<div class="d-toolbar">'
       + '<button class="btn edit-on" data-row="' + p.row + '">' + ICON_PENCIL + 'Редактировать</button>'
       + kitButtons(p)
       + '<span class="filled">заполнено ' + COLS.filter(i=>fieldVal(p,i)).length
       + ' из ' + COLS.length + '</span>'
       + (nEdits ? '<span class="edited">изменено вами полей: ' + nEdits + '</span>' : '')
-      + '</div><div class="fields">' + viewFields(p) + '</div>';
+      + '</div>';
     const key = 'p' + p.row;
     const lk = LINKS[key] || {};
     const field = (name, label, ph) => {
@@ -606,7 +606,8 @@ footer li{margin:4px 0}
       + locLink(p.name, p.area, '', parseCoords(lk.geo))
       + '<span class="caret">▸</span>'
       + '</summary><div class="detail" data-row="' + p.row + '">'
-      + det + linksBlock + '</div></details>';
+      + toolbar + linksBlock + '<div class="fields">' + viewFields(p) + '</div>'
+      + '</div></details>';
   }
 
   function render(){
