@@ -90,6 +90,7 @@ section.lead{margin-top:30px}
 .pin{cursor:pointer}
 .pin circle.dot{stroke:var(--surface); stroke-width:1.6; transition:r .12s}
 .pin:hover circle.dot, .pin.on circle.dot{stroke:var(--ink); stroke-width:2}
+.pin.empty-area text{fill:var(--muted)}
 .pin.exact circle.dot{stroke:var(--surface); stroke-width:1.4}
 .pin.exact:hover circle.dot{stroke:var(--ink)}
 .pin text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px;
@@ -464,6 +465,7 @@ footer li{margin:4px 0}
     ['Nai Yang',                   ['Nai Yang']],
     ['Surin',                      ['Surin']],
     ['Mai Khao',                   ['Mai Khao']],
+    ['Pa Klok',                    ['Pa Klok']],
     ['Район не указан',            ['']]
   ];
   const vals = P.map(p=>p.m2n).filter(v=>typeof v==='number');
@@ -768,7 +770,8 @@ footer li{margin:4px 0}
     'Karon':     [7.845, 98.293, 'left'],
     'Kata':      [7.816, 98.297, 'left'],
     'Chalong':   [7.847, 98.341, 'right'],
-    'Rawai':     [7.780, 98.327, 'right']
+    'Rawai':     [7.780, 98.327, 'right'],
+    'Pa Klok':   [8.032, 98.420, 'right']
   };
   // Приближённый контур Пхукета по береговым точкам (широта, долгота).
   const COAST = [
@@ -838,7 +841,20 @@ footer li{margin:4px 0}
     // сначала районы — по ним считаем только проекты без собственной точки
     Object.keys(GEO).forEach(area=>{
       const list = areaList(area).filter(p=>!coordsOf(p));
-      if(!list.length) return;
+      if(!list.length){
+        // район, где проектов нет вовсе, показываем бледной меткой — видно, куда добавлять
+        if((allByArea[area] || []).length) return;
+        const [la, ln, sd] = GEO[area];
+        const [ex, ey] = PROJ(la, ln);
+        svg += '<g class="pin empty-area" data-area="' + esc(area) + '" tabindex="0" role="button"'
+          + ' aria-label="' + esc(area) + ', проектов пока нет">'
+          + '<circle class="dot" cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="4.5"'
+          + ' fill="none" stroke="var(--line-strong)" stroke-dasharray="2 2"/>'
+          + '<text x="' + (sd === 'left' ? ex - 11 : ex + 11).toFixed(1) + '" y="' + (ey + 3.4).toFixed(1) + '"'
+          + ' text-anchor="' + (sd === 'left' ? 'end' : 'start') + '">'
+          + esc(area.toUpperCase()) + ' · 0</text></g>';
+        return;
+      }
       const [lat,lng,side] = GEO[area];
       const [x,y] = PROJ(lat,lng);
       const r = Math.max(5, Math.min(15, 4 + Math.sqrt(list.length) * 2.1));
@@ -884,7 +900,11 @@ footer li{margin:4px 0}
       + (m == null ? 'цен за м² нет' : 'от ' + m + ' тыс. ฿/м²')
       + '  ·  ' + locLink(area, '');
     if(!list.length){
-      mpList.innerHTML = '<p class="empty">В этом районе нет проектов выбранного типа.</p>';
+      mpList.innerHTML = '<p class="empty">'
+        + ((allByArea[area] || []).length
+            ? 'В этом районе нет проектов выбранного типа.'
+            : 'В этом районе пока нет проектов. Добавьте первый кнопкой «+ Добавить проект» в каталоге ниже.')
+        + '</p>';
       return;
     }
     mpList.innerHTML = list.map((p,i)=>
