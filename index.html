@@ -469,14 +469,23 @@ footer li{margin:4px 0}
     return p.m2n;
   }
 
-  // Материалы застройщика из вашей таблицы: sales kit, презентация, планировки.
+  // Материалы застройщика: значение из вашей таблицы, поверх — ваша правка.
+  // Пустая строка в правке означает «ссылку убрали», а не «взять из таблицы».
   const KIT_LABELS = {kit: 'Sales kit', pres: 'Презентация', plans: 'Планировки'};
-  function kitButtons(p){
-    const g = KITS[p.row]; if(!g) return '';
-    return Object.keys(KIT_LABELS).filter(k => g[k]).map(k=>
-      '<a class="btn kit" target="_blank" rel="noopener noreferrer" href="' + esc(g[k]) + '">'
-      + OPEN_ICON + esc(KIT_LABELS[k]) + '</a>').join('');
+  function linkVal(p, name){
+    const own = LINKS['p' + p.row] || {};
+    if(Object.prototype.hasOwnProperty.call(own, name)) return own[name] || '';
+    if(KIT_LABELS[name]) return (KITS[p.row] || {})[name] || '';
+    return '';
   }
+  function kitButtons(p){
+    return Object.keys(KIT_LABELS).map(k=>{
+      const u = linkVal(p, k);
+      return u ? '<a class="btn kit" target="_blank" rel="noopener noreferrer" href="' + esc(u) + '">'
+        + OPEN_ICON + esc(KIT_LABELS[k]) + '</a>' : '';
+    }).join('');
+  }
+  const rowKitUrl = p => linkVal(p, 'kit') || linkVal(p, 'pres');
 
   // Набор пунктов одинаков у всех проектов: пустые поля тоже на месте,
   // чтобы карточки читались одинаково и было видно, что ещё предстоит заполнить.
@@ -570,7 +579,7 @@ footer li{margin:4px 0}
       : '<span class="na">'+(rawM2 ? esc(String(rawM2).split('\n')[0]) : 'цены за м² нет')+'</span>';
     // В строке вместо цены квартиры — прямая ссылка на sales kit.
     // Сама цена никуда не делась, она в карточке среди полей.
-    const kitUrl = (KITS[p.row] || {}).kit || (KITS[p.row] || {}).pres || '';
+    const kitUrl = rowKitUrl(p);
     const unit = kitUrl
       ? '<a class="rowkit" target="_blank" rel="noopener noreferrer" href="' + esc(kitUrl) + '"'
         + ' title="Открыть материалы по проекту «' + esc(p.name) + '»">' + OPEN_ICON + 'Sales kit</a>'
@@ -586,7 +595,7 @@ footer li{margin:4px 0}
     const key = 'p' + p.row;
     const lk = LINKS[key] || {};
     const field = (name, label, ph) => {
-      const val = lk[name] || '';
+      const val = KIT_LABELS[name] ? linkVal(p, name) : (lk[name] || '');
       return '<div class="lk"><label for="' + key + '-' + name + '">' + label + '</label>'
         + '<div class="lk-in">'
         + '<input id="' + key + '-' + name + '" type="' + (name === 'geo' ? 'text' : 'url') + '" spellcheck="false"'
@@ -602,13 +611,16 @@ footer li{margin:4px 0}
         + '</div></div>';
     };
     const linksBlock = '<div class="links" data-key="' + key + '">'
-      + '<div class="lk-head">Мои ссылки по проекту'
+      + '<div class="lk-head">Ссылки по проекту'
       + '<span class="lk-state">' + (dbReady
           ? 'сохраняется автоматически'
           : 'сохранение недоступно — откройте страницу по ссылке артефакта') + '</span></div>'
-      + field('drive', 'Папка на Google Диске', 'https://drive.google.com/...')
-      + field('price', 'Прайс-лист',            'https://...')
-      + field('geo',   'Точка на карте',        '7.9985, 98.2913 или ссылка Google Maps')
+      + field('kit',   'Sales kit',              'https://...')
+      + field('pres',  'Презентация',            'https://...')
+      + field('plans', 'Планировки',             'https://...')
+      + field('drive', 'Папка на Google Диске',  'https://drive.google.com/...')
+      + field('price', 'Прайс-лист',             'https://...')
+      + field('geo',   'Точка на карте',         '7.9985, 98.2913 или ссылка Google Maps')
       + '</div>';
     return '<details class="row"><summary>'
       + '<span class="rank mono">'+i+'</span>'
@@ -913,6 +925,29 @@ footer li{margin:4px 0}
     }
   }
 
+  // Кнопки материалов после правки ссылки — без перерисовки каталога.
+  function refreshKits(p){
+    const box = list.querySelector('.detail[data-row="' + p.row + '"]');
+    if(box && !box.dataset.editing){
+      const bar = box.querySelector('.d-toolbar');
+      if(bar){
+        bar.querySelectorAll('a.btn.kit').forEach(a=>a.remove());
+        const pencil = bar.querySelector('.edit-on');
+        if(pencil) pencil.insertAdjacentHTML('afterend', kitButtons(p));
+      }
+    }
+    const summary = box && box.parentElement.querySelector('summary');
+    if(!summary) return;
+    const cell = summary.querySelector('.rowkit');
+    const u = rowKitUrl(p);
+    if(!cell) return;
+    const fresh = u
+      ? '<a class="rowkit" target="_blank" rel="noopener noreferrer" href="' + esc(u) + '"'
+        + ' title="Открыть материалы по проекту «' + esc(p.name) + '»">' + OPEN_ICON + 'Sales kit</a>'
+      : '<span class="rowkit none">—</span>';
+    cell.outerHTML = fresh;
+  }
+
   // Обновляем сводку строки, не перерисовывая весь каталог:
   // так не схлопнутся другие раскрытые строки.
   function refreshRow(p){
@@ -988,6 +1023,10 @@ footer li{margin:4px 0}
       await dbRef.doc(key).set(Object.assign({}, LINKS[key], {updatedAt: new Date().toISOString()}));
       setState(box, 'сохранено', 'ok');
       if(fieldName === 'geo') drawMap();
+      if(KIT_LABELS[fieldName]){
+        const p = rowOf(key.slice(1));
+        if(p) refreshKits(p);
+      }
     }catch(err){
       setState(box, err && err.code === 'not_granted'
         ? 'нет прав на запись — это копия только для чтения'
@@ -1000,7 +1039,10 @@ footer li{margin:4px 0}
   function applyLinks(){
     document.querySelectorAll('.lk input').forEach(inp=>{
       if(inp === document.activeElement) return;
-      const v = (LINKS[inp.dataset.key] || {})[inp.dataset.field] || '';
+      const pr = rowOf(inp.dataset.key.slice(1));
+      const v = (pr && KIT_LABELS[inp.dataset.field])
+        ? linkVal(pr, inp.dataset.field)
+        : ((LINKS[inp.dataset.key] || {})[inp.dataset.field] || '');
       if(inp.value !== v){
         inp.value = v;
         const go = inp.parentElement.querySelector('.go');
@@ -1035,7 +1077,7 @@ footer li{margin:4px 0}
       list.querySelectorAll('.detail').forEach(box=>{
         if(box.dataset.editing) return;
         const p = rowOf(box.dataset.row);
-        if(p){ closeEditor(box); refreshRow(p); }
+        if(p){ closeEditor(box); refreshRow(p); refreshKits(p); }
       });
     }, () => { /* подписка умерла — уже введённое не теряем */ });
     applyLinks();
