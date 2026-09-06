@@ -10,6 +10,7 @@
   --accent:#0d6e63; --accent-soft:#dcebe7; --accent-line:#9ec9c0;
   --brass:#a8761f; --brass-soft:#f4e9d2;
   --bar-track:#e2e9e7; --bar-low:#3f9c86; --bar-mid:#c99a3a; --bar-high:#b05f45;
+  --isle:#e4ece9; --isle-line:#b7cac5;
   --shadow:0 1px 2px rgba(17,32,30,.05), 0 8px 24px -18px rgba(17,32,30,.35);
   --r:10px;
 }
@@ -21,6 +22,8 @@
     --accent:#54c3b0; --accent-soft:#16302c; --accent-line:#2f5c55;
     --brass:#d7a94e; --brass-soft:#2c2415;
     --bar-track:#20302e; --bar-low:#4fbfa3; --bar-mid:#d7a94e; --bar-high:#d68264;
+  --isle:#182b28; --isle-line:#2f4a45;
+    --isle:#182b28; --isle-line:#2f4a45;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
   }
 }
@@ -92,6 +95,56 @@ section.lead{margin-top:30px}
   display:flex; flex-direction:column; align-items:flex-start; gap:2px}
 .pick-note{grid-column:1/-1; font-size:12.5px; color:var(--muted); border-left:2px solid var(--accent-line);
   padding-left:10px; margin-top:4px; font-style:italic}
+
+
+/* ---------- карта ---------- */
+.mapwrap{
+  display:grid; grid-template-columns:minmax(300px,420px) minmax(0,1fr); gap:26px;
+  align-items:start; margin-top:22px;
+}
+.mapbox{
+  position:relative; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); padding:10px 6px;
+}
+.mapbox svg{display:block; width:100%; height:auto}
+.isle{fill:var(--isle); stroke:var(--isle-line); stroke-width:1.4; stroke-linejoin:round}
+.pin{cursor:pointer}
+.pin circle.dot{stroke:var(--surface); stroke-width:1.6; transition:r .12s}
+.pin:hover circle.dot, .pin.on circle.dot{stroke:var(--ink); stroke-width:2}
+.pin text{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px;
+  font-weight:600; letter-spacing:.07em; fill:var(--ink-2)}
+.pin.on text{fill:var(--ink)}
+.pin:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.map-legend{
+  display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; padding:0 8px 4px;
+  font-size:11px; color:var(--muted)
+}
+.map-legend i{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px}
+.map-note{font-size:11.5px; color:var(--muted); margin:8px 8px 0; line-height:1.45}
+
+.mappanel{min-width:0}
+.mp-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  padding-bottom:9px; border-bottom:2px solid var(--ink)}
+.mp-head h3{font-family:"Golos Text",sans-serif; font-size:19px; font-weight:800;
+  letter-spacing:.01em; text-transform:uppercase}
+.mp-head .mp-sum{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted); margin-left:auto}
+.mp-list{display:flex; flex-direction:column; max-height:620px; overflow-y:auto}
+.mp-item{display:grid; grid-template-columns:22px minmax(0,1.3fr) minmax(0,1fr) 92px auto;
+  gap:4px 14px; align-items:baseline; padding:10px 2px; border-bottom:1px solid var(--line)}
+.mp-item .n{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); text-align:right}
+.mp-item .nm{font-family:"Golos Text",sans-serif; font-weight:600; font-size:14.5px}
+.mp-item .pu{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-2);
+  font-variant-numeric:tabular-nums; white-space:pre-line}
+.mp-item .pu.none{color:var(--muted)}
+.mp-item .pm{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600;
+  text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+.mp-item .pm.none{font-weight:400; color:var(--muted); font-size:11.5px}
+@media (max-width:820px){
+  .mapwrap{grid-template-columns:1fr}
+  .mp-list{max-height:none}
+  .mp-item{grid-template-columns:20px 1fr; }
+  .mp-item .pu, .mp-item .pm, .mp-item .loc{grid-column:2; text-align:left}
+}
 
 /* ---------- controls ---------- */
 .controls{position:sticky; top:0; z-index:5; background:var(--ground);
@@ -244,7 +297,31 @@ footer li{margin:4px 0}
 
 <div class="wrap">
 
-  <section id="catalog" class="lead">
+  <section id="map" class="lead">
+    <div class="sec-head">
+      <p class="eyebrow">Карта</p>
+      <h2>Проекты по острову</h2>
+    </div>
+    <p class="sec-note">Нажмите на район — справа появится список его проектов с ценой квартиры от и ценой за м². Размер точки — сколько проектов в районе, цвет — насколько дорогой район по цене за м².</p>
+    <div class="mapwrap">
+      <div>
+        <div class="mapbox" id="mapbox"></div>
+        <div class="map-legend">
+          <span><i style="background:var(--bar-low)"></i>до 130 тыс. ฿/м²</span>
+          <span><i style="background:var(--bar-mid)"></i>130–180</span>
+          <span><i style="background:var(--bar-high)"></i>от 180</span>
+          <span><i style="background:var(--line-strong)"></i>цен за м² нет</span>
+        </div>
+        <p class="map-note">Схема острова нарисована приближённо, а точки поставлены по координатам центров районов — это обзорная карта распределения цен, а не точный адрес проекта. Точный адрес открывает кнопка «Локация» в каталоге ниже.</p>
+      </div>
+      <div class="mappanel">
+        <div class="mp-head"><h3 id="mp-name">—</h3><span class="mp-sum" id="mp-sum"></span></div>
+        <div class="mp-list" id="mp-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="catalog">
     <div class="sec-head">
       <p class="eyebrow">Каталог</p>
       <h2>Все проекты по районам</h2>
@@ -501,8 +578,119 @@ footer li{margin:4px 0}
   list.addEventListener('click', e=>{
     if(e.target.closest('a.loc')) e.stopPropagation();
   });
+  mpSum.addEventListener('click', e=>{
+    if(e.target.closest('a.loc')) e.stopPropagation();
+  });
+  mpList.addEventListener('click', e=>{
+    if(e.target.closest('a.loc')) e.stopPropagation();
+  });
 
   render();
+
+  /* =================== карта острова =================== */
+  // Координаты центров районов. Проекция равнопромежуточная — на таком
+  // маленьком участке искажением широты можно пренебречь.
+  const GEO = {
+    'Mai Khao':  [8.155, 98.302, 'left'],
+    'Nai Yang':  [8.090, 98.298, 'left'],
+    'Layan':     [8.022, 98.286, 'left'],
+    'Bang Tao':  [7.998, 98.291, 'left'],
+    'Surin':     [7.978, 98.277, 'left'],
+    'Kamala':    [7.951, 98.280, 'left'],
+    'Patong':    [7.896, 98.292, 'left'],
+    'Kathu':     [7.912, 98.339, 'right'],
+    'Karon':     [7.845, 98.293, 'left'],
+    'Kata':      [7.816, 98.297, 'left'],
+    'Chalong':   [7.847, 98.341, 'right'],
+    'Rawai':     [7.780, 98.327, 'right']
+  };
+  // Приближённый контур Пхукета по береговым точкам (широта, долгота).
+  const COAST = [
+    [8.203,98.296],[8.185,98.334],[8.145,98.348],[8.108,98.356],[8.062,98.392],
+    [8.018,98.404],[7.972,98.399],[7.936,98.413],[7.898,98.421],[7.868,98.428],
+    [7.836,98.416],[7.822,98.396],[7.800,98.381],[7.772,98.355],[7.755,98.336],
+    [7.748,98.311],[7.766,98.296],[7.796,98.288],[7.828,98.284],[7.858,98.276],
+    [7.888,98.281],[7.916,98.267],[7.946,98.272],[7.976,98.269],[8.002,98.277],
+    [8.030,98.279],[8.062,98.286],[8.098,98.291],[8.140,98.289],[8.176,98.288]
+  ];
+  const PROJ = (lat, lng) => [ (lng - 98.245) * 1500 + 55, (8.225 - lat) * 1500 + 22 ];
+
+  const mapBox = document.getElementById('mapbox');
+  const mpName = document.getElementById('mp-name');
+  const mpSum  = document.getElementById('mp-sum');
+  const mpList = document.getElementById('mp-list');
+
+  // группируем проекты по району
+  const byArea = {};
+  P.forEach(p=>{ if(GEO[p.area]) (byArea[p.area] = byArea[p.area] || []).push(p); });
+  Object.values(byArea).forEach(a => a.sort((x,y)=>{
+    const xn = x.m2n == null, yn = y.m2n == null;
+    if(xn !== yn) return xn ? 1 : -1;
+    if(!xn && x.m2n !== y.m2n) return x.m2n - y.m2n;
+    return x.name.localeCompare(y.name,'ru');
+  }));
+
+  const minM2 = a => { const v = a.map(p=>p.m2n).filter(n=>typeof n === 'number'); return v.length ? Math.min(...v) : null; };
+  function areaColor(a){
+    const m = minM2(a);
+    if(m == null) return 'var(--line-strong)';
+    return m < 130 ? 'var(--bar-low)' : m < 180 ? 'var(--bar-mid)' : 'var(--bar-high)';
+  }
+
+  const coastPts = COAST.map(([la,ln])=>PROJ(la,ln).map(v=>v.toFixed(1)).join(',')).join(' ');
+  let svg = '<svg viewBox="0 0 380 780" role="img" aria-label="Схема Пхукета с районами, где есть проекты">'
+    + '<polygon class="isle" points="' + coastPts + '"/>';
+
+  Object.keys(GEO).forEach(area=>{
+    const list = byArea[area]; if(!list) return;
+    const [lat,lng,side] = GEO[area];
+    const [x,y] = PROJ(lat,lng);
+    const r = Math.max(5, Math.min(15, 4 + Math.sqrt(list.length) * 2.1));
+    const tx = side === 'left' ? x - r - 7 : x + r + 7;
+    svg += '<g class="pin" data-area="' + esc(area) + '" tabindex="0" role="button"'
+      + ' aria-label="' + esc(area) + ', проектов: ' + list.length + '">'
+      + '<circle class="dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1)
+      + '" fill="' + areaColor(list) + '"/>'
+      + '<text x="' + tx.toFixed(1) + '" y="' + (y + 3.4).toFixed(1) + '"'
+      + ' text-anchor="' + (side === 'left' ? 'end' : 'start') + '">'
+      + esc(area.toUpperCase()) + ' · ' + list.length + '</text></g>';
+  });
+  svg += '</svg>';
+  mapBox.innerHTML = svg;
+
+  function showArea(area){
+    const list = byArea[area] || [];
+    mapBox.querySelectorAll('.pin').forEach(g=>g.classList.toggle('on', g.dataset.area === area));
+    mpName.textContent = area;
+    const m = minM2(list);
+    mpSum.innerHTML = list.length + ' проект.  ·  '
+      + (m == null ? 'цен за м² нет' : 'от ' + m + ' тыс. ฿/м²')
+      + '  ·  ' + locLink(area, '');
+    mpList.innerHTML = list.map((p,i)=>
+      '<div class="mp-item">'
+      + '<span class="n">' + (i+1) + '</span>'
+      + '<span class="nm">' + esc(p.name) + '</span>'
+      + (p.unit ? '<span class="pu">' + esc(p.unit) + '</span>'
+                : '<span class="pu none">цены квартиры нет</span>')
+      + (typeof p.m2n === 'number'
+          ? '<span class="pm">' + p.m2n + ' тыс. ฿/м²</span>'
+          : '<span class="pm none">за м² нет</span>')
+      + locLink(p.name, p.area)
+      + '</div>').join('');
+  }
+
+  mapBox.addEventListener('click', e=>{
+    if(e.target.closest('a.loc')) return;
+    const g = e.target.closest('.pin'); if(g) showArea(g.dataset.area);
+  });
+  mapBox.addEventListener('keydown', e=>{
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const g = e.target.closest('.pin');
+    if(g){ e.preventDefault(); showArea(g.dataset.area); }
+  });
+
+  // район с наибольшим числом проектов открыт сразу, чтобы панель не пустовала
+  showArea(Object.keys(byArea).sort((a,b)=>byArea[b].length - byArea[a].length)[0] || 'Bang Tao');
 
   // ---- ссылки владельца: ввод, сохранение, живое обновление ----
   function setState(box, text, cls){
