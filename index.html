@@ -74,6 +74,27 @@ section.lead{margin-top:30px}
 .sec-head h2{font-size:23px; font-weight:600; letter-spacing:-.01em}
 .sec-note{color:var(--muted); font-size:13.5px; max-width:74ch; margin:0 0 22px}
 
+
+/* ---------- сворачиваемая секция ---------- */
+.section-fold{margin-top:30px}
+.section-fold > summary{
+  list-style:none; cursor:pointer; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  padding:10px 4px; border-bottom:1px solid var(--line);
+}
+.section-fold > summary::-webkit-details-marker{display:none}
+.section-fold > summary:hover h2{color:var(--accent)}
+.section-fold > summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.section-fold > summary h2{font-size:23px; font-weight:600; letter-spacing:-.01em}
+.section-fold .fold-hint{
+  margin-left:auto; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+}
+.section-fold .fold-hint::after{content:"развернуть"}
+.section-fold[open] .fold-hint::after{content:"свернуть"}
+.section-fold .fold-caret{color:var(--muted); font-size:12px; transition:transform .15s}
+.section-fold[open] .fold-caret{transform:rotate(90deg)}
+.section-fold > .sec-note{margin-top:16px}
+
 /* ---------- карта ---------- */
 .mapwrap{
   display:grid; grid-template-columns:minmax(300px,420px) minmax(0,1fr); gap:26px;
@@ -351,11 +372,13 @@ footer li{margin:4px 0}
 
 <div class="wrap">
 
-  <section id="map" class="lead">
-    <div class="sec-head">
-      <p class="eyebrow">Карта</p>
+  <details id="map" class="section-fold lead">
+    <summary>
+      <span class="eyebrow">Карта</span>
       <h2>Проекты по острову</h2>
-    </div>
+      <span class="fold-hint"></span>
+      <span class="fold-caret">▸</span>
+    </summary>
     <p class="sec-note">Нажмите на район — справа появится список его проектов с ценой квартиры от и ценой за м². Размер точки — сколько проектов в районе, цвет — насколько дорогой район по цене за м².</p>
     <div class="mapwrap">
       <div>
@@ -378,7 +401,7 @@ footer li{margin:4px 0}
         <div class="mp-list" id="mp-list"></div>
       </div>
     </div>
-  </section>
+  </details>
 
   <section id="catalog" class="lead">
     <div class="sec-head">
