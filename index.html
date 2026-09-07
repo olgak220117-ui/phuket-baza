@@ -538,6 +538,15 @@ footer li{margin:4px 0}
   const editsOf = p => (LINKS['p' + p.row] || {}).edits || {};
   // Название проекта: ваша правка перекрывает таблицу.
   const nameOf = p => (editsOf(p)['1'] || p.name || '').trim() || p.name;
+  // Район: ваша правка перекрывает таблицу. Написания из таблицы приводим к одному виду.
+  const AREA_NORM = {'Cherng Talay (Bang Tao)': 'Cherngtalay', 'Cherng Talay (Thalang)': 'Cherngtalay',
+                     'Cherng Talay': 'Cherngtalay', 'Choeng Thale': 'Cherngtalay',
+                     'Layan (Choeng Thale)': 'Layan', 'Nai Harn': 'Nai Harn'};
+  function areaOf(p){
+    const e = editsOf(p)['7'];
+    const v = String(e === undefined ? (p.area || '') : e).trim();
+    return AREA_NORM[v] || v;
+  }
   function fieldVal(p, i){
     const e = editsOf(p);
     return Object.prototype.hasOwnProperty.call(e, i) ? e[i] : (p.cells[i] || '');
@@ -620,7 +629,7 @@ footer li{margin:4px 0}
     groups = [];
     const used = new Set();
     CLUSTERS.forEach(([title, areas])=>{
-      const g = P.filter(p=>!used.has(p.row) && areas.indexOf(p.area)>=0);
+      const g = P.filter(p=>!used.has(p.row) && areas.indexOf(areaOf(p))>=0);
       g.forEach(p=>used.add(p.row));
       g.sort((a,b)=>{
         const am = m2of(a), bm = m2of(b);
@@ -722,11 +731,11 @@ footer li{margin:4px 0}
       + '</div>';
     return '<details class="row"><summary>'
       + '<span class="rank mono">'+i+'</span>'
-      + '<span class="pname">'+esc(nameOf(p))+(p.added?'<span class="badge-new">добавлен</span>':'')+(p.area?'<em>'+esc(p.area)+'</em>':'')+'</span>'
+      + '<span class="pname">'+esc(nameOf(p))+(p.added?'<span class="badge-new">добавлен</span>':'')+(areaOf(p)?'<em>'+esc(areaOf(p))+'</em>':'')+'</span>'
       + '<span class="m2">'+m2+'</span>'
       + unit
       + '<span class="when2">'+esc(fieldVal(p, '13'))+'</span>'
-      + locLink(nameOf(p), p.area, '', parseCoords(lk.geo))
+      + locLink(nameOf(p), areaOf(p), '', parseCoords(lk.geo))
       + '<span class="caret">▸</span>'
       + '</summary><div class="detail" data-row="' + p.row + '">'
       + toolbar + linksBlock + '<div class="fields">' + viewFields(p) + '</div>'
@@ -741,7 +750,7 @@ footer li{margin:4px 0}
       let items = g.items;
       if(filterT !== '*') items = items.filter(typeTest(filterT));
       if(onlyPrice) items = items.filter(p=>typeof p.m2n==='number');
-      if(q) items = items.filter(p=>(nameOf(p)+' '+p.dev+' '+p.area).toLowerCase().includes(q));
+      if(q) items = items.filter(p=>(nameOf(p)+' '+p.dev+' '+areaOf(p)).toLowerCase().includes(q));
       if(!items.length) return;
       shown += items.length;
       const nums = items.map(p=>p.m2n).filter(v=>typeof v==='number');
@@ -826,7 +835,7 @@ footer li{margin:4px 0}
   const allByArea = {};
   function rebuildAreas(){
     Object.keys(allByArea).forEach(k => delete allByArea[k]);
-    P.forEach(p=>{ if(GEO[p.area]) (allByArea[p.area] = allByArea[p.area] || []).push(p); });
+    P.forEach(p=>{ const a = areaOf(p); if(GEO[a]) (allByArea[a] = allByArea[a] || []).push(p); });
     Object.values(allByArea).forEach(a => a.sort(byPrice));
   }
   rebuildAreas();
@@ -837,7 +846,7 @@ footer li{margin:4px 0}
 
   const mtchips = document.getElementById('mtchips');
   function buildTypeChips(){
-    const inMap = P.filter(p=>GEO[p.area]);
+    const inMap = P.filter(p=>GEO[areaOf(p)]);
     mtchips.innerHTML = '<button class="chip" aria-pressed="true" data-t="*">Все типы <span class="cnt">'
       + inMap.length + '</span></button>'
       + TYPES.map(([k,label,test])=>{
@@ -896,7 +905,7 @@ footer li{margin:4px 0}
 
     // затем точные точки проектов — поверх районных
     P.forEach(p=>{
-      if(!GEO[p.area]) return;
+      if(!GEO[areaOf(p)]) return;
       if(mapType !== '*' && !typeTest(mapType)(p)) return;
       const c = coordsOf(p); if(!c) return;
       const [x,y] = PROJ(c.lat, c.lng);
@@ -942,7 +951,7 @@ footer li{margin:4px 0}
       + (typeof p.m2n === 'number'
           ? '<span class="pm">' + p.m2n + ' тыс. ฿/м²</span>'
           : '<span class="pm none">за м² нет</span>')
-      + locLink(nameOf(p), p.area, '', coordsOf(p))
+      + locLink(nameOf(p), areaOf(p), '', coordsOf(p))
       + '</div>').join('');
   }
 
@@ -955,7 +964,7 @@ footer li{margin:4px 0}
     const g = e.target.closest('.pin'); if(!g) return;
     if(g.dataset.area) { showArea(g.dataset.area); return; }
     const proj = P.find(p=>String(p.row) === g.dataset.project);
-    if(proj && proj.area) showArea(proj.area);
+    if(proj && areaOf(proj)) showArea(areaOf(proj));
   });
   mapBox.addEventListener('keydown', e=>{
     if(e.key !== 'Enter' && e.key !== ' ') return;
@@ -1041,6 +1050,11 @@ footer li{margin:4px 0}
     if(st) st.textContent = 'сохраняю…';
     try{
       await dbRef.doc(key).set(Object.assign({}, LINKS[key], {updatedAt: new Date().toISOString()}));
+      // Район или название меняют состав блоков — пересобираем каталог и карту целиком.
+      if(Object.prototype.hasOwnProperty.call(edits, '7') || p.added){
+        rebuildAll();
+        return;
+      }
       closeEditor(box);
       refreshRow(p);
       drawMap();
